@@ -1,15 +1,6 @@
-import { getContract } from "viem";
-import { wagmiConfig } from "@/app/providers";
 import abi from "@/abis/HealthConsultationBooking.json";
 
 export const contractConfig = {
   address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
-  abi,
+  abi: abi as any, // temporary: real ABI will be replaced later
 };
-
-export function getContractInstance() {
-  return getContract({
-    ...contractConfig,
-    client: wagmiConfig.getClient(),
-  });
-}
