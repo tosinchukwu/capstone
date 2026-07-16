@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { useConfirmAppointment, useCompleteAppointment, useGetAppointment } from "@/hooks/useAppointments";
 
-// Define the shape of contract data (matches your struct)
 type AppointmentContract = {
   id: bigint;
   patient: string;
@@ -27,10 +26,8 @@ export default function AppointmentDetail({ id }: { id: number }) {
       .then(setDbData);
   }, [id]);
 
-  // Wait for both data sources
   if (!dbData || !contractData) return <div>Loading...</div>;
 
-  // Cast to our expected type (the contract returns a tuple/struct)
   const data = contractData as unknown as AppointmentContract;
   const { patient, doctor, isConfirmed, isCompleted } = data;
 

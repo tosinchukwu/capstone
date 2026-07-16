@@ -2,9 +2,9 @@ import { useReadContract, useWriteContract } from "wagmi";
 import { contractConfig } from "@/lib/contract";
 
 export function useCreateAppointment() {
-  const { write, isPending } = useWriteContract();
+  const { writeContract, isPending } = useWriteContract();
   const create = (args: any[]) => {
-    write({
+    writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
       functionName: "createAppointment",
@@ -15,9 +15,9 @@ export function useCreateAppointment() {
 }
 
 export function useConfirmAppointment() {
-  const { write, isPending } = useWriteContract();
+  const { writeContract, isPending } = useWriteContract();
   const confirm = (args: any[]) => {
-    write({
+    writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
       functionName: "confirmAppointment",
@@ -28,9 +28,9 @@ export function useConfirmAppointment() {
 }
 
 export function useCompleteAppointment() {
-  const { write, isPending } = useWriteContract();
+  const { writeContract, isPending } = useWriteContract();
   const complete = (args: any[]) => {
-    write({
+    writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
       functionName: "completeAppointment",

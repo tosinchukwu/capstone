@@ -13,7 +13,6 @@ const nextConfig = {
     }
 
     const webpack = require('webpack');
-    
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^@x402\//
