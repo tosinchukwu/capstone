@@ -1,7 +1,6 @@
 {
   "name": "health-consultation-booking-app",
   "version": "0.1.0",
-  "description": "A decentralized health consultation booking platform powered by blockchain, Privy, and PostgreSQL.",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,6 +14,9 @@
     "@privy-io/react-auth": "^2.0.0",
     "@privy-io/wagmi": "^2.0.0",
     "@tanstack/react-query": "^5.0.0",
+    "@x402/core": "0.0.1",
+    "@x402/evm": "0.0.1",
+    "@x402/svm": "0.0.1",
     "next": "14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -32,8 +34,5 @@
     "prisma": "^5.0.0",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.0"
-  },
-  "author": "Team 9 TCC7",
-  "license": "MIT",
-  "keywords": ["healthcare", "blockchain", "ethereum", "nextjs", "privy", "web3", "booking"]
+  }
 }
