@@ -15,6 +15,8 @@
     "@privy-io/react-auth": "^2.0.0",
     "@privy-io/wagmi": "^2.0.0",
     "@tanstack/react-query": "^5.0.0",
+    "@x402/core": "latest",
+    "@x402/evm": "latest",
     "next": "14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
