@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Health Consultation Booking App",
-  description: "Book consultations with doctors securely on-chain, with privacy-first off-chain data storage.",
+  description: "Book consultations with doctors securely on-chain.",
 };
 
 export default function RootLayout({

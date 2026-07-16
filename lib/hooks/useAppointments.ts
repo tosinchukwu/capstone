@@ -1,31 +1,31 @@
-import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
-import { contractConfig } from '@/lib/contract';
+import { useContractRead, useContractWrite } from "wagmi";
+import { contractConfig } from "@/lib/contract";
 
 export function useCreateAppointment() {
   return useContractWrite({
     ...contractConfig,
-    functionName: 'createAppointment',
+    functionName: "createAppointment",
   });
 }
 
 export function useConfirmAppointment() {
   return useContractWrite({
     ...contractConfig,
-    functionName: 'confirmAppointment',
+    functionName: "confirmAppointment",
   });
 }
 
 export function useCompleteAppointment() {
   return useContractWrite({
     ...contractConfig,
-    functionName: 'completeAppointment',
+    functionName: "completeAppointment",
   });
 }
 
 export function useGetAppointment(id: number) {
   return useContractRead({
     ...contractConfig,
-    functionName: 'getAppointment',
+    functionName: "getAppointment",
     args: [BigInt(id)],
   });
 }

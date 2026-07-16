@@ -2,7 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config) => {
-    // Needed for viem/wagmi to work with polyfills
     config.resolve.fallback = {
       fs: false,
       net: false,

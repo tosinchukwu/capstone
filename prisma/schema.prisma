@@ -1,8 +1,5 @@
-// This is your Prisma schema for the Health Consultation Booking App
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"   // optional: you can keep or remove this line
 }
 
 datasource db {
