@@ -8,8 +8,8 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const [dbData, setDbData] = useState<any>(null);
   const { data: contractData, refetch } = useGetAppointment(id);
   
-  const { write: confirm } = useConfirmAppointment();
-  const { write: complete } = useCompleteAppointment();
+  const { confirm, isPending: confirmPending } = useConfirmAppointment();
+  const { complete, isPending: completePending } = useCompleteAppointment();
 
   useEffect(() => {
     fetch(`/api/appointments/${id}`)
@@ -22,12 +22,12 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const { patient, doctor, isConfirmed, isCompleted } = contractData;
 
   const handleConfirm = () => {
-    confirm({ args: [BigInt(id)] });
-    setTimeout(refetch, 5000); // Wait for transaction to confirm
+    confirm([BigInt(id)]);
+    setTimeout(refetch, 5000);
   };
 
   const handleComplete = () => {
-    complete({ args: [BigInt(id)] });
+    complete([BigInt(id)]);
     setTimeout(refetch, 5000);
   };
 
@@ -44,16 +44,18 @@ export default function AppointmentDetail({ id }: { id: number }) {
         <button
           onClick={handleConfirm}
           className="bg-yellow-500 text-white px-4 py-2 rounded mt-2 hover:bg-yellow-600"
+          disabled={confirmPending}
         >
-          Confirm Appointment
+          {confirmPending ? "Confirming..." : "Confirm Appointment"}
         </button>
       )}
       {doctor === address && isConfirmed && !isCompleted && (
         <button
           onClick={handleComplete}
           className="bg-green-600 text-white px-4 py-2 rounded mt-2 hover:bg-green-700"
+          disabled={completePending}
         >
-          Complete Appointment
+          {completePending ? "Completing..." : "Complete Appointment"}
         </button>
       )}
     </div>

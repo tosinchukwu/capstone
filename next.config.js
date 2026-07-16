@@ -2,7 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { isServer }) => {
-    // Polyfill 'ws' for browser
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -15,15 +14,10 @@ const nextConfig = {
 
     const webpack = require('webpack');
     
-    // Ignore @x402 packages (Coinbase SDK)
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^@x402\//
-      })
-    );
-
-    // Ignore React Native modules (MetaMask SDK)
-    config.plugins.push(
+      }),
       new webpack.IgnorePlugin({
         resourceRegExp: /^@react-native-async-storage\/async-storage$/
       })

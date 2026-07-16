@@ -12,17 +12,16 @@ export default function AppointmentForm() {
   const [patientName, setPatientName] = useState("");
   const [description, setDescription] = useState("");
 
-  const { write, isPending } = useCreateAppointment();
+  const { create, isPending } = useCreateAppointment();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address || !write) return;
+    if (!address) return;
 
     const dateTimestamp = Math.floor(new Date(date).getTime() / 1000);
     
-    write({
-      args: [doctor as `0x${string}`, BigInt(dateTimestamp)],
-    });
+    // Call the contract
+    create([doctor as `0x${string}`, BigInt(dateTimestamp)]);
 
     // For now, we'll use a placeholder appointment ID
     // Later, you'll need to parse the event logs

@@ -1,31 +1,51 @@
-import { useContractRead, useContractWrite } from "wagmi";
+import { useReadContract, useWriteContract } from "wagmi";
 import { contractConfig } from "@/lib/contract";
 
 export function useCreateAppointment() {
-  return useContractWrite({
-    ...contractConfig,
-    functionName: "createAppointment",
-  });
+  const { write, isPending } = useWriteContract();
+  const create = (args: any[]) => {
+    write({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "createAppointment",
+      args,
+    });
+  };
+  return { create, isPending };
 }
 
 export function useConfirmAppointment() {
-  return useContractWrite({
-    ...contractConfig,
-    functionName: "confirmAppointment",
-  });
+  const { write, isPending } = useWriteContract();
+  const confirm = (args: any[]) => {
+    write({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "confirmAppointment",
+      args,
+    });
+  };
+  return { confirm, isPending };
 }
 
 export function useCompleteAppointment() {
-  return useContractWrite({
-    ...contractConfig,
-    functionName: "completeAppointment",
-  });
+  const { write, isPending } = useWriteContract();
+  const complete = (args: any[]) => {
+    write({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "completeAppointment",
+      args,
+    });
+  };
+  return { complete, isPending };
 }
 
 export function useGetAppointment(id: number) {
-  return useContractRead({
-    ...contractConfig,
+  const result = useReadContract({
+    address: contractConfig.address,
+    abi: contractConfig.abi,
     functionName: "getAppointment",
     args: [BigInt(id)],
   });
+  return result;
 }
