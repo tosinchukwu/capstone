@@ -13,7 +13,7 @@
   "dependencies": {
     "@prisma/client": "^5.0.0",
     "@privy-io/react-auth": "^1.0.0",
-    "@privy-io/wagmi": "^0.0.1",
+    "@privy-io/wagmi": "^1.0.3",
     "@tanstack/react-query": "^5.0.0",
     "next": "14.0.4",
     "react": "^18.2.0",
