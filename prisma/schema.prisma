@@ -1,23 +1,21 @@
 // This is your Prisma schema for the Health Consultation Booking App
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"   // Keep this path
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"   // optional: you can keep or remove this line
 }
 
 datasource db {
-  provider = "postgresql"               // Use PostgreSQL (or SQLite if you prefer)
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// User roles
 enum Role {
   ADMIN
   PATIENT
   DOCTOR
 }
 
-// Appointment status (mirrors on‑chain states, but stored off‑chain for UI)
 enum AppointmentStatus {
   PENDING
   CONFIRMED
@@ -27,27 +25,25 @@ enum AppointmentStatus {
 model User {
   id        String   @id @default(uuid())
   name      String
-  email     String?  @unique          // optional, can be used for notifications
-  wallet    String   @unique          // Ethereum address
+  email     String?  @unique
+  wallet    String   @unique
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
 
-  // Relations
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments  Appointment[] @relation("DoctorAppointments")
 }
 
 model Appointment {
   id                   String   @id @default(uuid())
-  chainAppointmentId   BigInt   @unique   // The ID from the smart contract (uint256)
+  chainAppointmentId   BigInt   @unique
   patientId            String
   doctorId             String
-  date                 DateTime           // Appointment date/time
-  description          String             // Symptoms, notes (sensitive, stored off‑chain)
+  date                 DateTime
+  description          String
   status               AppointmentStatus @default(PENDING)
   createdAt            DateTime @default(now())
 
-  // Relations
   patient User @relation("PatientAppointments", fields: [patientId], references: [id])
   doctor  User @relation("DoctorAppointments",  fields: [doctorId],  references: [id])
 
