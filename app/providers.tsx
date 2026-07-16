@@ -25,11 +25,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       config={{
         loginMethods: ["email", "wallet", "google"],
         appearance: { theme: "light", accentColor: "#2563eb" },
-        wagmiConfig,
+        // v2: wagmiConfig is passed to WagmiProvider below, not here
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
+        <WagmiProvider config={wagmiConfig}>
+          {children}
+        </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
   );
