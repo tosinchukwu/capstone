@@ -1,36 +1,293 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 🏥 Health Consultation Booking App
 
-First, run the development server:
+A decentralized health consultation booking platform that stores **sensitive data off-chain** in PostgreSQL while using an Ethereum smart contract for appointment confirmation and completion.
+
+> **Privacy first:** Patient names, symptoms, and descriptions never touch the blockchain. Only appointment IDs and status are stored on-chain.
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Repository Structure & Team Ownership](#repository-structure--team-ownership)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+- [Smart Contract (Foundry)](#smart-contract-foundry)
+- [Database (PostgreSQL)](#database-postgresql)
+- [Authentication with Privy](#authentication-with-privy)
+- [Environment Variables](#environment-variables)
+- [Running Locally](#running-locally)
+- [Deployment to Vercel](#deployment-to-vercel)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## 📖 Overview
+
+This application allows patients to book consultations with doctors.
+
+### Workflow
+
+1. Patient signs in using **Privy** (email, social login, or wallet).
+2. Patient books an appointment.
+3. The smart contract stores:
+   - Appointment ID
+   - Patient wallet
+   - Doctor wallet
+   - Appointment date
+   - Status
+4. PostgreSQL stores:
+   - Patient name
+   - Symptoms
+   - Description
+   - Other sensitive information
+5. Doctor confirms or completes the appointment.
+6. The frontend combines on-chain status with off-chain data.
+
+---
+
+## 🧩 Repository Structure & Team Ownership
+
+```text
+tcc7-t9-hcbookingapp/
+├── abis/
+│   └── HealthConsultationBooking.json
+├── contracts/
+│   ├── src/
+│   ├── script/
+│   ├── test/
+│   ├── lib/
+│   └── foundry.toml
+├── app/
+│   ├── api/
+│   ├── appointments/
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+├── hooks/
+├── lib/
+│   ├── constants.ts
+│   ├── contract.ts
+│   └── prisma.ts
+├── prisma/
+│   └── schema.prisma
+├── public/
+├── types/
+├── .env.local.example
+├── next.config.js
+├── package.json
+├── tailwind.config.js
+└── README.md
+```
+
+| Member | Responsibilities |
+| --- | --- |
+| 👨‍💻 Member 1 | Smart contract, tests, deployment, ABI |
+| 🎨 Member 2 | UI, pages, components, Tailwind |
+| 🔗 Member 3 | Web3 integration, hooks, APIs |
+| 🧠 Member 4 | Prisma, PostgreSQL, CI/CD, deployment |
+
+---
+
+## 🛠 Tech Stack
+
+- Solidity
+- Foundry
+- Next.js 14
+- React
+- TypeScript
+- Tailwind CSS
+- Prisma ORM
+- PostgreSQL
+- Privy
+- Wagmi
+- Viem
+- Vercel
+
+---
+
+## 📦 Prerequisites
+
+- Node.js 18+
+- npm
+- Git
+- Foundry
+- PostgreSQL (Neon recommended)
+- Privy account
+
+---
+
+## 🔧 Installation & Setup
+
+Clone the repository:
+
+```bash
+git clone https://github.com/tosinchukwu/tcc7-t9-hcbookingapp.git
+cd tcc7-t9-hcbookingapp
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Install Foundry dependencies:
+
+```bash
+cd contracts
+forge install OpenZeppelin/openzeppelin-contracts
+cd ..
+```
+
+Create environment file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+---
+
+## ⛓ Smart Contract (Foundry)
+
+Run tests:
+
+```bash
+cd contracts
+forge test
+```
+
+Deploy:
+
+```bash
+forge script script/DeployHealthConsultationBooking.s.sol \
+--rpc-url $RPC_URL \
+--private-key $PRIVATE_KEY \
+--broadcast \
+--verify
+```
+
+Export the ABI into:
+
+```text
+abis/HealthConsultationBooking.json
+```
+
+---
+
+## 🗄 Database (PostgreSQL)
+
+Uses Prisma ORM.
+
+Main models:
+
+- User
+- Appointment
+- Payment
+- Review
+
+Recommended providers:
+
+- Neon
+- Railway
+
+---
+
+## 🔐 Authentication with Privy
+
+Privy supports:
+
+- Email login
+- Google login
+- X login
+- Wallet login
+
+Configure:
+
+```text
+NEXT_PUBLIC_PRIVY_APP_ID
+```
+
+---
+
+## 🌐 Environment Variables
+
+```env
+DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+
+NEXT_PUBLIC_CONTRACT_ADDRESS="0x..."
+
+NEXT_PUBLIC_RPC_URL="https://rpc.sepolia.org"
+
+NEXT_PUBLIC_CHAIN_ID=11155111
+
+NEXT_PUBLIC_PRIVY_APP_ID="YOUR_PRIVY_APP_ID"
+```
+
+---
+
+## 🏃 Running Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🚀 Deployment to Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Push to GitHub.
+2. Import the repository into Vercel.
+3. Add all environment variables.
+4. Ensure build script is:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```json
+"build": "prisma generate && prisma db push && next build"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. Deploy.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🤝 Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Use feature branches.
+- Keep PRs focused.
+- Run:
+
+```bash
+npm run build
+forge test
+```
+
+before pushing.
+
+---
+
+## 📄 License
+
+MIT License.
+
+---
+
+## ❓ Questions?
+
+Open a GitHub Issue or contact **@tosinchukwu**.
+
+Happy coding! 🚀

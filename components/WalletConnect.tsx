@@ -1,37 +1,30 @@
 "use client";
+import { usePrivy } from "@privy-io/react-auth";
 
-import { useState } from "react";
-import { connectWallet } from "@/lib/web3";
+export default function ConnectWallet() {
+  const { ready, authenticated, login, logout } = usePrivy();
 
-export default function WalletConnect() {
-  const [address, setAddress] = useState("");
-
-  const handleConnect = async () => {
-    const { address } = await connectWallet();
-    setAddress(address);
-  };
-
-  const handleDisconnect = () => {
-    setAddress("");
-  };
+  if (!ready) {
+    return <div className="animate-pulse">Loading...</div>;
+  }
 
   return (
-    <>
-      {address ? (
+    <div>
+      {!authenticated ? (
         <button
-          onClick={handleDisconnect}
-          className="bg-red-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={login}
         >
-          Disconnect ({address.slice(0, 6)}...)
+          Connect / Sign Up
         </button>
       ) : (
         <button
-          onClick={handleConnect}
-          className="bg-black text-white px-4 py-2 rounded"
+          className="bg-red-600 text-white px-4 py-2 rounded"
+          onClick={logout}
         >
-          Connect Wallet
+          Disconnect
         </button>
       )}
-    </>
+    </div>
   );
 }
