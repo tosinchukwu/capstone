@@ -1,60 +1,57 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// This is your Prisma schema for the Health Consultation Booking App
 
 generator client {
   provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  output   = "../lib/generated/prisma"   // Keep this path
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql"               // Use PostgreSQL (or SQLite if you prefer)
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id     String @id @default(uuid())
-  name   String
-  email  String @unique
-  wallet String?
-  role   Role @default(USER)
-  createdAt DateTime @default(now())
-  reviews Review[]
-  payments Payment[]
-  attendance Attendance[]
-}
-
-model Payment {
-  id       String @id @default(uuid())
-  userId   String
-  amount   Float
-  reference String
-  hashProof String?
-  createdAt DateTime @default(now())
-  user     User  @relation(fields: [userId], references: [id])
-}
-
-model Review {
-  id     String @id @default(uuid())
-  content String
-  rating  Int
-  hashProof String?
-  userId   String
-  createdAt DateTime @default(now())
-  user    User  @relation(fields: [userId], references: [id])
-}
-
-model Attendance {
-  id          String  @id @default(uuid())
-  userId      String
-  date        DateTime
-  hashProof   String?
-  user      User @relation(fields: [userId], references: [id])
-}
-
+// User roles
 enum Role {
   ADMIN
-  USER
+  PATIENT
+  DOCTOR
+}
+
+// Appointment status (mirrors on‑chain states, but stored off‑chain for UI)
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?  @unique          // optional, can be used for notifications
+  wallet    String   @unique          // Ethereum address
+  role      Role     @default(PATIENT)
+  createdAt DateTime @default(now())
+
+  // Relations
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+}
+
+model Appointment {
+  id                   String   @id @default(uuid())
+  chainAppointmentId   BigInt   @unique   // The ID from the smart contract (uint256)
+  patientId            String
+  doctorId             String
+  date                 DateTime           // Appointment date/time
+  description          String             // Symptoms, notes (sensitive, stored off‑chain)
+  status               AppointmentStatus @default(PENDING)
+  createdAt            DateTime @default(now())
+
+  // Relations
+  patient User @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctor  User @relation("DoctorAppointments",  fields: [doctorId],  references: [id])
+
+  @@index([chainAppointmentId])
+  @@index([patientId])
+  @@index([doctorId])
 }

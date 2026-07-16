@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏥 Health Consultation Booking App
 
-## Getting Started
+A decentralized health consultation booking platform that stores **sensitive data off‑chain** (in a PostgreSQL database) while using a lightweight Ethereum smart contract for appointment confirmation and completion status.
 
-First, run the development server:
+> **Privacy‑first**: Patient names, symptoms, and descriptions **never** touch the blockchain – only appointment IDs and statuses are on‑chain.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📋 Table of Contents
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [Overview](#overview)
+- [Repository Structure & Team Ownership](#repository-structure--team-ownership)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+- [Smart Contract (Foundry)](#smart-contract-foundry)
+- [Database (PostgreSQL)](#database-postgresql)
+- [Authentication with Privy](#authentication-with-privy)
+- [Environment Variables](#environment-variables)
+- [Running Locally](#running-locally)
+- [Deployment to Vercel](#deployment-to-vercel)
+- [Contributing](#contributing)
+- [License](#license)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📖 Overview
 
-To learn more about Next.js, take a look at the following resources:
+This application allows patients to book consultations with doctors. The process is:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Patient** connects their wallet (via Privy – email, social, or crypto wallet) and creates an appointment by:
+   - Calling the smart contract (`createAppointment`) – stores minimal data (patient address, doctor address, date, status).
+   - Saving detailed information (patient name, symptoms, description) to the **off‑chain database** via an API route.
+2. **Doctor** can confirm or complete the appointment by calling the respective contract functions.
+3. The **frontend** displays a unified view, combining on‑chain status and off‑chain details.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+All sensitive information remains in your private PostgreSQL database, complying with data protection regulations.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧩 Repository Structure & Team Ownership
