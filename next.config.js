@@ -13,11 +13,19 @@ const nextConfig = {
       };
     }
 
-    // Ignore the @x402 packages (they cause build failures)
     const webpack = require('webpack');
+    
+    // Ignore @x402 packages (Coinbase SDK)
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^@x402\//
+      })
+    );
+
+    // Ignore React Native modules (MetaMask SDK)
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^@react-native-async-storage\/async-storage$/
       })
     );
 

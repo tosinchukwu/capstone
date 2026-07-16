@@ -1,32 +1,32 @@
-'use client';
-import { useState } from 'react';
-import { useAccount } from 'wagmi';
-import { useCreateAppointment } from '@/hooks/useAppointments';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useState } from "react";
+import { useAccount } from "wagmi";
+import { useCreateAppointment } from "@/hooks/useAppointments";
+import { useRouter } from "next/navigation";
 
 export default function AppointmentForm() {
   const { address } = useAccount();
   const router = useRouter();
-  const [doctor, setDoctor] = useState('');
-  const [date, setDate] = useState('');
-  const [patientName, setPatientName] = useState('');
-  const [description, setDescription] = useState('');
+  const [doctor, setDoctor] = useState("");
+  const [date, setDate] = useState("");
+  const [patientName, setPatientName] = useState("");
+  const [description, setDescription] = useState("");
 
-  const { writeAsync } = useCreateAppointment();
+  const { write, isPending } = useCreateAppointment();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address) return;
+    if (!address || !write) return;
 
     const dateTimestamp = Math.floor(new Date(date).getTime() / 1000);
-    const tx = await writeAsync({
+    
+    write({
       args: [doctor as `0x${string}`, BigInt(dateTimestamp)],
     });
 
-    // Wait for receipt to get appointmentId from event logs
-    const receipt = await tx.wait();
-    const event = receipt.logs.find(log => log.topics[0] === '0x...') // actually use contract event parser
-    const appointmentId = 0; // parse from event
+    // For now, we'll use a placeholder appointment ID
+    // Later, you'll need to parse the event logs
+    const appointmentId = 0;
 
     // Save to DB
     await fetch('/api/appointments', {
@@ -47,6 +47,7 @@ export default function AppointmentForm() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4">
+      <h1 className="text-2xl font-bold">Create Appointment</h1>
       <input
         type="text"
         placeholder="Doctor Address (0x...)"
@@ -77,8 +78,12 @@ export default function AppointmentForm() {
         className="w-full p-2 border rounded"
         rows={4}
       />
-      <button type="submit" className="w-full bg-green-600 text-white p-2 rounded">
-        Create Appointment
+      <button 
+        type="submit" 
+        className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 disabled:opacity-50"
+        disabled={isPending || !address}
+      >
+        {isPending ? "Creating..." : "Create Appointment"}
       </button>
     </form>
   );
