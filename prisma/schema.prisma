@@ -36,7 +36,7 @@ model User {
   rating          Float?    @default(0)
   yearsExperience Int?
   isActive        Boolean   @default(true)
-  autoConfirm     Boolean   @default(false)  // new: if true, appointments auto-confirm
+  autoConfirm     Boolean   @default(false)
 
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments  Appointment[] @relation("DoctorAppointments")
@@ -44,14 +44,18 @@ model User {
 }
 
 model Availability {
-  id        String   @id @default(uuid())
-  doctorId  String
-  doctor    User     @relation(fields: [doctorId], references: [id], onDelete: CASCADE)
-  date      DateTime
-  startTime String   // "09:00"
-  endTime   String   // "10:00"
-  isBooked  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  doctorId    String
+  doctor      User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  date        DateTime
+  startTime   String
+  endTime     String
+  isBooked    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // Opposite relation to Appointment
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  appointmentId String? @unique
 
   @@index([doctorId, date])
 }
@@ -66,7 +70,6 @@ model Appointment {
   status               AppointmentStatus @default(PENDING)
   createdAt            DateTime @default(now())
 
-  // Link to the slot if booked from availability
   availabilityId       String?  @unique
   availability         Availability? @relation(fields: [availabilityId], references: [id])
 
