@@ -16,7 +16,6 @@ export default function ProfilePage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
-          // Not registered yet – redirect to register
           router.push("/register-doctor");
         } else {
           setProfile(data);
@@ -35,14 +34,14 @@ export default function ProfilePage() {
     });
     if (res.ok) {
       alert("Profile updated successfully!");
+      router.push("/dashboard");
     } else {
-      alert("Failed to update profile.");
+      const err = await res.text();
+      alert("Failed to update profile: " + err);
     }
   };
 
-  if (!isConnected) {
-    return <div className="p-4">Please connect your wallet.</div>;
-  }
+  if (!isConnected) return <div className="p-4">Please connect your wallet.</div>;
   if (loading) return <div className="p-4">Loading...</div>;
 
   return (

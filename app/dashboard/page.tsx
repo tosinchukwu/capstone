@@ -35,8 +35,8 @@ export default function DashboardPage() {
   const [doctorId, setDoctorId] = useState("");
 
   useEffect(() => {
-    if (!isConnected) return;
-    // Fetch doctor profile to get ID
+    if (!isConnected || !address) return;
+
     fetch(`/api/doctors/profile?wallet=${address}`)
       .then((res) => res.json())
       .then((data) => {
@@ -48,7 +48,10 @@ export default function DashboardPage() {
           router.push("/register-doctor");
         }
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        router.push("/register-doctor");
+      });
   }, [address, isConnected, router]);
 
   const fetchData = (id: string) => {
@@ -69,34 +72,59 @@ export default function DashboardPage() {
 
   const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!doctorId || !newSlotDate || !newSlotStart || !newSlotEnd) return;
-    const res = await fetch("/api/availability", {
-      method: "POST",
-      body: JSON.stringify({ doctorId, date: newSlotDate, startTime: newSlotStart, endTime: newSlotEnd }),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (res.ok) {
-      const slot = await res.json();
-      setSlots([...slots, slot]);
-      setNewSlotDate("");
-      setNewSlotStart("");
-      setNewSlotEnd("");
+    if (!doctorId || !newSlotDate || !newSlotStart || !newSlotEnd) {
+      alert("Please fill all fields.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/availability", {
+        method: "POST",
+        body: JSON.stringify({
+          doctorId,
+          date: newSlotDate,
+          startTime: newSlotStart,
+          endTime: newSlotEnd,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const slot = await res.json();
+        setSlots([...slots, slot]);
+        setNewSlotDate("");
+        setNewSlotStart("");
+        setNewSlotEnd("");
+        alert("Slot added successfully!");
+      } else {
+        const err = await res.text();
+        alert("Failed to add slot: " + err);
+      }
+    } catch (error) {
+      console.error("Error adding slot:", error);
+      alert("Error adding slot. Check console.");
     }
   };
 
   const handleDeleteSlot = async (id: string) => {
     if (!confirm("Delete this slot?")) return;
-    await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
-    setSlots(slots.filter((s) => s.id !== id));
+    const res = await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setSlots(slots.filter((s) => s.id !== id));
+    } else {
+      alert("Failed to delete slot.");
+    }
   };
 
   const updateAppointmentStatus = async (id: string, status: string) => {
-    await fetch(`/api/appointments/${id}`, {
+    const res = await fetch(`/api/appointments/${id}`, {
       method: "PUT",
       body: JSON.stringify({ status }),
       headers: { "Content-Type": "application/json" },
     });
-    setAppointments(appointments.map((a) => (a.id === id ? { ...a, status } : a)));
+    if (res.ok) {
+      setAppointments(appointments.map((a) => (a.id === id ? { ...a, status } : a)));
+    } else {
+      alert("Failed to update appointment.");
+    }
   };
 
   if (!isConnected) {
@@ -122,7 +150,6 @@ export default function DashboardPage() {
         <Link href="/" className="text-primary-600 hover:underline">← Home</Link>
       </div>
 
-      {/* Profile link */}
       <div className="mb-4">
         <Link href="/dashboard/profile" className="text-blue-600 hover:underline">
           Edit Profile →
@@ -142,12 +169,11 @@ export default function DashboardPage() {
                   <p><strong>Date:</strong> {new Date(app.date).toLocaleString()}</p>
                   <p><strong>Description:</strong> {app.description}</p>
                   <p className="mt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
-                      app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                      app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                      "bg-yellow-100 text-yellow-800"
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
+                        app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
+                          app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                            "bg-yellow-100 text-yellow-800"
+                      }`}>
                       {app.status || "PENDING"}
                     </span>
                   </p>
@@ -216,7 +242,10 @@ export default function DashboardPage() {
         <div className="grid gap-2">
           {slots.map((slot) => (
             <div key={slot.id} className="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 rounded">
-              <span>{new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime} {slot.isBooked && "(Booked)"}</span>
+              <span>
+                {new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime}
+                {slot.isBooked && " (Booked)"}
+              </span>
               {!slot.isBooked && (
                 <button
                   onClick={() => handleDeleteSlot(slot.id)}
