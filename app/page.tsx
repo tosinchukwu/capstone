@@ -13,9 +13,9 @@ export default function Home() {
     <div className="min-h-screen">
       <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          {/* Logo - smaller text on mobile */}
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400 truncate max-w-[180px] sm:max-w-[300px]">
-            🏥 Health Consultation Booking
+          {/* Title – full on PC, truncates on mobile */}
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400 truncate sm:truncate md:overflow-visible md:whitespace-normal max-w-[180px] sm:max-w-[300px] md:max-w-none">
+            🏥 Health Consultation Booking App
           </h1>
 
           {/* Right side: Dashboard link, Theme Toggle, Connect Button */}
