@@ -37,6 +37,7 @@ export default function AppointmentForm() {
   const [description, setDescription] = useState("");
   const [selectedDoctorAddress, setSelectedDoctorAddress] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { create, isPending } = useCreateAppointment();
 
@@ -74,7 +75,7 @@ export default function AppointmentForm() {
       setSelectedDoctor(doctorId);
       setSelectedDoctorAddress(doctor.wallet);
       setSelectedDoctorId(doctorId);
-      setSelectedSlot(""); // reset slot selection
+      setSelectedSlot("");
     }
   };
 
@@ -84,37 +85,71 @@ export default function AppointmentForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address || !selectedDoctorAddress || !selectedSlot || !patientName || !description) {
-      alert("Please fill all fields.");
+    if (!address) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    if (!selectedDoctorAddress) {
+      alert("Please select a doctor.");
+      return;
+    }
+    if (!selectedSlot) {
+      alert("Please select an available slot.");
+      return;
+    }
+    if (!patientName || !description) {
+      alert("Please fill in all fields.");
       return;
     }
 
     const slot = slots.find((s) => s.id === selectedSlot);
-    if (!slot) return;
+    if (!slot) {
+      alert("Selected slot not found.");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const dateTimestamp = Math.floor(new Date(slot.date).getTime() / 1000);
 
-    // Call the contract
-    create([selectedDoctorAddress as `0x${string}`, BigInt(dateTimestamp)]);
+    // 1. Call the contract
+    try {
+      await create([selectedDoctorAddress as `0x${string}`, BigInt(dateTimestamp)]);
+    } catch (err: any) {
+      console.error("Contract call failed:", err);
+      alert("Contract call failed: " + (err.message || "Unknown error"));
+      setIsSubmitting(false);
+      return;
+    }
 
-    // For now, use placeholder chainAppointmentId (will need to parse event)
-    const chainAppointmentId = 0;
+    // 2. Save to database
+    try {
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        body: JSON.stringify({
+          chainAppointmentId: 0, // temporary – we can't get the real ID from the contract event yet
+          patientId: address,
+          doctorId: selectedDoctorId,
+          date: slot.date,
+          description,
+          availabilityId: selectedSlot,
+          status: "PENDING",
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
 
-    // Save to database
-    await fetch("/api/appointments", {
-      method: "POST",
-      body: JSON.stringify({
-        chainAppointmentId,
-        patientId: address,
-        doctorId: selectedDoctorId,
-        date: slot.date,
-        description,
-        availabilityId: selectedSlot,
-        status: "PENDING", // will be auto-confirmed if doctor set autoConfirm
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save appointment");
+      }
+    } catch (err: any) {
+      console.error("API call failed:", err);
+      alert("Failed to save appointment to database: " + (err.message || "Unknown error"));
+      setIsSubmitting(false);
+      return;
+    }
 
+    alert("Appointment booked successfully!");
     router.push("/");
   };
 
@@ -130,7 +165,6 @@ export default function AppointmentForm() {
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4 bg-white dark:bg-gray-800 rounded-xl shadow-card">
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Appointment</h1>
 
-      {/* Doctor Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Select Doctor
@@ -156,7 +190,6 @@ export default function AppointmentForm() {
         )}
       </div>
 
-      {/* Slot Selection */}
       {selectedDoctorId && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -184,7 +217,6 @@ export default function AppointmentForm() {
         </div>
       )}
 
-      {/* Patient Name */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Your Name
@@ -199,7 +231,6 @@ export default function AppointmentForm() {
         />
       </div>
 
-      {/* Description */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Description / Symptoms
@@ -217,9 +248,9 @@ export default function AppointmentForm() {
       <button
         type="submit"
         className="w-full btn-primary"
-        disabled={isPending || !address || !selectedSlot}
+        disabled={isPending || isSubmitting || !selectedSlot}
       >
-        {isPending ? "Booking..." : "Book Appointment"}
+        {isPending || isSubmitting ? "Booking..." : "Book Appointment"}
       </button>
     </form>
   );
