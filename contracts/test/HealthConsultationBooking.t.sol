@@ -16,13 +16,12 @@ contract HealthConsultationBookingTest is Test {
     function test_CreateAppointment() public {
         vm.prank(patient);
         booking.createAppointment(doctor, block.timestamp + 1 days);
-        (uint256 id, address patientAddr, address doctorAddr, , bool confirmed, bool completed) =
-            booking.getAppointment(0);
-        assertEq(id, 0);
-        assertEq(patientAddr, patient);
-        assertEq(doctorAddr, doctor);
-        assertFalse(confirmed);
-        assertFalse(completed);
+        HealthConsultationBooking.Appointment memory app = booking.getAppointment(0);
+        assertEq(app.id, 0);
+        assertEq(app.patient, patient);
+        assertEq(app.doctor, doctor);
+        assertFalse(app.isConfirmed);
+        assertFalse(app.isCompleted);
     }
 
     function test_ConfirmAppointment() public {
@@ -30,8 +29,8 @@ contract HealthConsultationBookingTest is Test {
         booking.createAppointment(doctor, block.timestamp + 1 days);
         vm.prank(doctor);
         booking.confirmAppointment(0);
-        (, , , , bool confirmed, ) = booking.getAppointment(0);
-        assertTrue(confirmed);
+        HealthConsultationBooking.Appointment memory app = booking.getAppointment(0);
+        assertTrue(app.isConfirmed);
     }
 
     function test_CompleteAppointment() public {
@@ -41,8 +40,8 @@ contract HealthConsultationBookingTest is Test {
         booking.confirmAppointment(0);
         vm.prank(doctor);
         booking.completeAppointment(0);
-        (, , , , , bool completed) = booking.getAppointment(0);
-        assertTrue(completed);
+        HealthConsultationBooking.Appointment memory app = booking.getAppointment(0);
+        assertTrue(app.isCompleted);
     }
 
     function test_OnlyDoctorCanConfirm() public {

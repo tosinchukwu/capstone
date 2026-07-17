@@ -17,7 +17,9 @@ contract HealthConsultationBooking is Ownable {
 
     mapping(uint256 => Appointment) private _appointments;
 
-    event AppointmentCreated(uint256 indexed appointmentId, address indexed patient, address indexed doctor, uint256 date);
+    event AppointmentCreated(
+        uint256 indexed appointmentId, address indexed patient, address indexed doctor, uint256 date
+    );
     event AppointmentConfirmed(uint256 indexed appointmentId, address indexed doctor);
     event AppointmentCompleted(uint256 indexed appointmentId, address indexed doctor);
 
@@ -36,12 +38,7 @@ contract HealthConsultationBooking is Ownable {
     function createAppointment(address doctor, uint256 date) external {
         uint256 appointmentId = _appointmentIdCounter;
         _appointments[appointmentId] = Appointment({
-            id: appointmentId,
-            patient: msg.sender,
-            doctor: doctor,
-            date: date,
-            isConfirmed: false,
-            isCompleted: false
+            id: appointmentId, patient: msg.sender, doctor: doctor, date: date, isConfirmed: false, isCompleted: false
         });
         _appointmentIdCounter++;
         emit AppointmentCreated(appointmentId, msg.sender, doctor, date);
