@@ -20,7 +20,7 @@ const tipsData = [
   { title: "Add Flavour to Your Water", content: "Add lemon, cucumber, or mint to make water more appealing and increase intake.", category: "Nutrition" },
 
   // Mental Health
-  { title: "Practice Gratitude", content: "Write down three things you're grateful for each day. This rewires your brain for positivity.", category: "Mental Health" },
+  { title: "Practice Gratitude", content: "Write down three things you are grateful for each day. This rewires your brain for positivity.", category: "Mental Health" },
   { title: "Take a Digital Detox", content: "Spend one hour without your phone each day. Use that time to read, walk, or meditate.", category: "Mental Health" },
   { title: "Connect with Loved Ones", content: "Social connections are vital for mental health. Call a friend or family member today.", category: "Mental Health" },
   { title: "Set Boundaries", content: "Learn to say no to things that drain your energy. Protect your time and mental space.", category: "Mental Health" },
@@ -36,19 +36,17 @@ const tipsData = [
   { title: "Join a Community Group", content: "Being part of a group (book club, fitness class) improves mental and social well-being.", category: "Fitness" },
 
   // Preventive Care
-  { title: "Get Annual Check-ups", content: "Regular health screenings can detect issues early. Don't skip your yearly physical.", category: "Preventive Care" },
+  { title: "Get Annual Check-ups", content: "Regular health screenings can detect issues early. Do not skip your yearly physical.", category: "Preventive Care" },
   { title: "Wear Sunscreen Daily", content: "UV rays damage skin even on cloudy days. Apply SPF 30 or higher every morning.", category: "Preventive Care" },
   { title: "Stay Up‑to‑Date on Vaccinations", content: "Vaccines protect you and your community from preventable diseases. Check your records.", category: "Preventive Care" },
   { title: "Monitor Your Blood Pressure", content: "High blood pressure is a silent killer. Get it checked regularly, especially if you have risk factors.", category: "Preventive Care" },
   { title: "Practice Good Hand Hygiene", content: "Wash hands frequently with soap and water for at least 20 seconds to prevent infections.", category: "Preventive Care" },
-  { title: "Don't Skip Dental Check-ups", content: "Oral health is linked to heart health. Visit your dentist twice a year.", category: "Preventive Care" },
+  { title: "Do Not Skip Dental Check-ups", content: "Oral health is linked to heart health. Visit your dentist twice a year.", category: "Preventive Care" },
 
   // Sleep
   { title: "Avoid Caffeine After 2 PM", content: "Caffeine has a half‑life of 6 hours – it can disrupt your sleep if taken too late.", category: "Sleep" },
   { title: "Wind Down with a Book", content: "Reading a physical book before bed helps your brain shift into sleep mode.", category: "Sleep" },
   { title: "Limit Alcohol Before Bed", content: "Alcohol may help you fall asleep, but it disrupts deep sleep and reduces quality.", category: "Sleep" },
-  { title: "Keep a Consistent Sleep Schedule", content: "Go to bed and wake up at the same time every day, even on weekends.", category: "Sleep" },
-  { title: "Create a Restful Environment", content: "Keep your bedroom cool, dark, and quiet. Use blackout curtains and white noise if needed.", category: "Sleep" },
 
   // Hydration
   { title: "Drink a Glass of Water Upon Waking", content: "After 8 hours of sleep, your body is dehydrated. Drink water first thing.", category: "Hydration" },
@@ -65,12 +63,100 @@ const tipsData = [
   { title: "Listen to Your Body", content: "Pay attention to hunger, fatigue, and pain signals. Rest when you need to.", category: "General Wellness" },
 ];
 
+const doctorsData = [
+  {
+    name: "Dr. Grace Adeyemi",
+    email: "grace.adeyemi@hospital.com",
+    wallet: "0x1234567890abcdef1234567890abcdef12345678",
+    role: "DOCTOR",
+    specialty: "Cardiology",
+    hospital: "Lagos General Hospital",
+    location: "Lagos, Nigeria",
+    bio: "Experienced cardiologist with 15 years of practice. Specializes in heart disease prevention and treatment.",
+    yearsExperience: 15,
+    rating: 4.9,
+    isActive: true,
+  },
+  {
+    name: "Dr. Samuel Okafor",
+    email: "samuel.okafor@hospital.com",
+    wallet: "0x2345678901abcdef2345678901abcdef23456789",
+    role: "DOCTOR",
+    specialty: "Pediatrics",
+    hospital: "Abuja Children's Hospital",
+    location: "Abuja, Nigeria",
+    bio: "Passionate about children's health. Expert in pediatric infectious diseases and vaccination.",
+    yearsExperience: 10,
+    rating: 4.8,
+    isActive: true,
+  },
+  {
+    name: "Dr. Amina Bello",
+    email: "amina.bello@hospital.com",
+    wallet: "0x3456789012abcdef3456789012abcdef34567890",
+    role: "DOCTOR",
+    specialty: "Gynecology",
+    hospital: "Kano Women's Clinic",
+    location: "Kano, Nigeria",
+    bio: "Specialist in women's health with 12 years of experience. Offers comprehensive gynecological care.",
+    yearsExperience: 12,
+    rating: 4.7,
+    isActive: true,
+  },
+  {
+    name: "Dr. Femi Adebayo",
+    email: "femi.adebayo@hospital.com",
+    wallet: "0x4567890123abcdef4567890123abcdef45678901",
+    role: "DOCTOR",
+    specialty: "Orthopedics",
+    hospital: "Ibadan Orthopedic Center",
+    location: "Ibadan, Nigeria",
+    bio: "Expert in bone and joint health. Specializes in sports injuries and joint replacement.",
+    yearsExperience: 8,
+    rating: 4.6,
+    isActive: true,
+  },
+  {
+    name: "Dr. Ngozi Eze",
+    email: "ngozi.eze@hospital.com",
+    wallet: "0x5678901234abcdef5678901234abcdef56789012",
+    role: "DOCTOR",
+    specialty: "Dermatology",
+    hospital: "Enugu Skin Clinic",
+    location: "Enugu, Nigeria",
+    bio: "Dedicated dermatologist with 9 years of experience. Treats skin conditions and cosmetic concerns.",
+    yearsExperience: 9,
+    rating: 4.5,
+    isActive: true,
+  },
+];
+
 async function main() {
+  console.log("🌱 Starting seed...");
+
+  // Clear existing data
+  console.log("🗑️  Clearing existing data...");
   await prisma.tip.deleteMany({});
+  await prisma.user.deleteMany({ where: { role: "DOCTOR" } });
+
+  // Seed tips
+  console.log(`📝 Seeding ${tipsData.length} health tips...`);
   await prisma.tip.createMany({ data: tipsData });
   console.log(`✅ Seeded ${tipsData.length} health tips.`);
+
+  // Seed doctors
+  console.log(`👨‍⚕️ Seeding ${doctorsData.length} doctors...`);
+  for (const doc of doctorsData) {
+    await prisma.user.create({ data: doc });
+  }
+  console.log(`✅ Seeded ${doctorsData.length} doctors.`);
+
+  console.log("🎉 Seed completed successfully!");
 }
 
 main()
-  .catch(console.error)
+  .catch((e) => {
+    console.error("❌ Seed failed:", e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());
