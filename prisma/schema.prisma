@@ -27,6 +27,15 @@ model User {
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
 
+  // Doctor-specific fields (null for patients)
+  specialty       String?
+  hospital        String?
+  location        String?
+  bio             String?
+  rating          Float?    @default(0)
+  yearsExperience Int?
+  isActive        Boolean   @default(true)
+
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments  Appointment[] @relation("DoctorAppointments")
 }
