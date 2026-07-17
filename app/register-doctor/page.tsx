@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function RegisterDoctor() {
   const { address, isConnected } = useAccount();
@@ -25,7 +26,7 @@ export default function RegisterDoctor() {
     }
     const payload = { ...form, wallet: address, role: "DOCTOR" };
     const res = await fetch("/api/doctors/profile", {
-      method: "PUT", // we'll use PUT to create/update
+      method: "PUT",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" },
     });
@@ -33,12 +34,21 @@ export default function RegisterDoctor() {
       alert("Registration successful!");
       router.push("/dashboard");
     } else {
-      alert("Registration failed.");
+      const error = await res.text();
+      alert("Registration failed: " + error);
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      {/* Back Button */}
+      <Link
+        href="/"
+        className="inline-flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 mb-4 transition"
+      >
+        ← Back to Home
+      </Link>
+
       <h1 className="text-2xl font-bold mb-4">Register as Doctor</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET – fetch doctor's own profile (requires wallet address in query)
+// GET – fetch doctor profile
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get("wallet");
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   return NextResponse.json(doctor);
 }
 
-// PUT – update doctor's profile
+// PUT – create or update doctor profile
 export async function PUT(request: Request) {
   const body = await request.json();
   const { wallet, name, email, specialty, hospital, location, bio, yearsExperience, autoConfirm } = body;
@@ -41,18 +41,44 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Wallet address required" }, { status: 400 });
   }
 
-  const updated = await prisma.user.update({
+  // Check if user exists
+  const existingUser = await prisma.user.findUnique({
     where: { wallet },
-    data: {
-      name,
-      email,
-      specialty,
-      hospital,
-      location,
-      bio,
-      yearsExperience: yearsExperience ? parseInt(yearsExperience) : undefined,
-      autoConfirm,
-    },
   });
-  return NextResponse.json(updated);
+
+  let updatedUser;
+  if (existingUser) {
+    // Update existing user to doctor
+    updatedUser = await prisma.user.update({
+      where: { wallet },
+      data: {
+        name,
+        email,
+        specialty,
+        hospital,
+        location,
+        bio,
+        yearsExperience: yearsExperience ? parseInt(yearsExperience) : undefined,
+        autoConfirm,
+        role: "DOCTOR",
+      },
+    });
+  } else {
+    // Create new doctor
+    updatedUser = await prisma.user.create({
+      data: {
+        wallet,
+        name,
+        email,
+        specialty,
+        hospital,
+        location,
+        bio,
+        yearsExperience: yearsExperience ? parseInt(yearsExperience) : undefined,
+        autoConfirm,
+        role: "DOCTOR",
+      },
+    });
+  }
+  return NextResponse.json(updatedUser);
 }
