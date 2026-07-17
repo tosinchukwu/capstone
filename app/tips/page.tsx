@@ -58,7 +58,7 @@ export default function TipsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="animate-pulse">Loading tips...</div>
         </div>
@@ -67,11 +67,11 @@ export default function TipsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">💡 All Health Tips</h1>
-          <Link href="/" className="text-blue-600 hover:underline">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">💡 All Health Tips</h1>
+          <Link href="/" className="text-primary-600 dark:text-primary-400 hover:underline">
             ← Back to Home
           </Link>
         </div>
@@ -82,7 +82,7 @@ export default function TipsPage() {
             placeholder="Search tips by title or content..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2 border rounded-lg"
+            className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
           />
         </div>
 
@@ -93,8 +93,8 @@ export default function TipsPage() {
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1 rounded-full text-sm transition ${
                 selectedCategory === cat
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-primary-600 text-white shadow-md dark:bg-primary-500"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               }`}
             >
               {cat}
@@ -102,16 +102,16 @@ export default function TipsPage() {
           ))}
         </div>
 
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           Showing {filteredTips.length} tips
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTips.map((tip) => (
-            <div key={tip.id} className="bg-white p-4 rounded-lg shadow border hover:shadow-lg transition">
-              <h3 className="font-semibold text-lg text-blue-700">{tip.title}</h3>
-              <p className="text-sm text-gray-600 mt-1">{tip.content}</p>
-              <p className="text-xs text-gray-400 mt-2">
+            <div key={tip.id} className="card card-hover">
+              <h3 className="font-semibold text-lg text-primary-700 dark:text-primary-300">{tip.title}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{tip.content}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 {tip.category} • {new Date(tip.createdAt).toLocaleDateString()}
               </p>
             </div>
