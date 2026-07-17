@@ -16,31 +16,56 @@ type Doctor = {
   yearsExperience: number;
 };
 
+type Slot = {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isBooked: boolean;
+};
+
 export default function AppointmentForm() {
   const { address } = useAccount();
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState("");
-  const [date, setDate] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("");
   const [patientName, setPatientName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedDoctorAddress, setSelectedDoctorAddress] = useState("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
 
   const { create, isPending } = useCreateAppointment();
 
+  // Fetch doctors
   useEffect(() => {
     fetch("/api/doctors")
       .then((res) => res.json())
       .then((data) => {
         setDoctors(data);
-        setLoading(false);
+        setLoadingDoctors(false);
       })
-      .catch(() => {
-        console.error("Failed to fetch doctors");
-        setLoading(false);
-      });
+      .catch(() => setLoadingDoctors(false));
   }, []);
+
+  // Fetch slots when doctor is selected
+  useEffect(() => {
+    if (!selectedDoctorId) {
+      setSlots([]);
+      return;
+    }
+    setLoadingSlots(true);
+    fetch(`/api/availability?doctorId=${selectedDoctorId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSlots(data);
+        setLoadingSlots(false);
+      })
+      .catch(() => setLoadingSlots(false));
+  }, [selectedDoctorId]);
 
   const handleDoctorSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const doctorId = e.target.value;
@@ -48,49 +73,52 @@ export default function AppointmentForm() {
     if (doctor) {
       setSelectedDoctor(doctorId);
       setSelectedDoctorAddress(doctor.wallet);
-    } else {
-      setSelectedDoctor("");
-      setSelectedDoctorAddress("");
+      setSelectedDoctorId(doctorId);
+      setSelectedSlot(""); // reset slot selection
     }
+  };
+
+  const handleSlotSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedSlot(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address || !selectedDoctorAddress || !date || !patientName || !description) {
+    if (!address || !selectedDoctorAddress || !selectedSlot || !patientName || !description) {
       alert("Please fill all fields.");
       return;
     }
 
-    const dateTimestamp = Math.floor(new Date(date).getTime() / 1000);
+    const slot = slots.find((s) => s.id === selectedSlot);
+    if (!slot) return;
+
+    const dateTimestamp = Math.floor(new Date(slot.date).getTime() / 1000);
 
     // Call the contract
     create([selectedDoctorAddress as `0x${string}`, BigInt(dateTimestamp)]);
 
-    // For now, we use a placeholder appointmentId; later you'd get it from event logs.
-    const appointmentId = 0;
+    // For now, use placeholder chainAppointmentId (will need to parse event)
+    const chainAppointmentId = 0;
 
     // Save to database
-    try {
-      await fetch("/api/appointments", {
-        method: "POST",
-        body: JSON.stringify({
-          chainAppointmentId: appointmentId,
-          patientId: address, // we don't have a user id yet, but we can store the wallet
-          doctorId: selectedDoctor, // this is the doctor's UUID
-          date: new Date(date).toISOString(),
-          description,
-          status: "PENDING",
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (err) {
-      console.error("Failed to save appointment:", err);
-    }
+    await fetch("/api/appointments", {
+      method: "POST",
+      body: JSON.stringify({
+        chainAppointmentId,
+        patientId: address,
+        doctorId: selectedDoctorId,
+        date: slot.date,
+        description,
+        availabilityId: selectedSlot,
+        status: "PENDING", // will be auto-confirmed if doctor set autoConfirm
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
 
     router.push("/");
   };
 
-  if (loading) {
+  if (loadingDoctors) {
     return <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading doctors...</div>;
   }
 
@@ -102,6 +130,7 @@ export default function AppointmentForm() {
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4 bg-white dark:bg-gray-800 rounded-xl shadow-card">
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Appointment</h1>
 
+      {/* Doctor Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Select Doctor
@@ -122,24 +151,40 @@ export default function AppointmentForm() {
         {selectedDoctor && (
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             <p>Wallet: {selectedDoctorAddress.slice(0, 6)}...{selectedDoctorAddress.slice(-4)}</p>
-            <p>Rating: ⭐ {doctors.find(d => d.id === selectedDoctor)?.rating.toFixed(1)}</p>
+            <p>Rating: ⭐ {doctors.find(d => d.id === selectedDoctor)?.rating?.toFixed(1) || "N/A"}</p>
           </div>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Date & Time
-        </label>
-        <input
-          type="datetime-local"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-          required
-        />
-      </div>
+      {/* Slot Selection */}
+      {selectedDoctorId && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Available Slots
+          </label>
+          {loadingSlots ? (
+            <p className="text-sm text-gray-500">Loading slots...</p>
+          ) : slots.length === 0 ? (
+            <p className="text-sm text-yellow-600">No available slots for this doctor.</p>
+          ) : (
+            <select
+              value={selectedSlot}
+              onChange={handleSlotSelect}
+              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+              required
+            >
+              <option value="">Select a slot...</option>
+              {slots.map((slot) => (
+                <option key={slot.id} value={slot.id}>
+                  {new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
 
+      {/* Patient Name */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Your Name
@@ -154,6 +199,7 @@ export default function AppointmentForm() {
         />
       </div>
 
+      {/* Description */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Description / Symptoms
@@ -171,9 +217,9 @@ export default function AppointmentForm() {
       <button
         type="submit"
         className="w-full btn-primary"
-        disabled={isPending || !address || !selectedDoctor}
+        disabled={isPending || !address || !selectedSlot}
       >
-        {isPending ? "Creating..." : "Create Appointment"}
+        {isPending ? "Booking..." : "Book Appointment"}
       </button>
     </form>
   );

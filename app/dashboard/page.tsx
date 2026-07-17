@@ -1,0 +1,234 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import ConnectWallet from "@/components/ConnectWallet";
+
+type Appointment = {
+  id: string;
+  patientName: string;
+  date: string;
+  status: string;
+  description: string;
+  patient: { name: string; wallet: string };
+  doctor: { name: string };
+};
+
+type Slot = {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isBooked: boolean;
+};
+
+export default function DashboardPage() {
+  const { address, isConnected } = useAccount();
+  const router = useRouter();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [newSlotDate, setNewSlotDate] = useState("");
+  const [newSlotStart, setNewSlotStart] = useState("");
+  const [newSlotEnd, setNewSlotEnd] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [doctorId, setDoctorId] = useState("");
+
+  useEffect(() => {
+    if (!isConnected) return;
+    // Fetch doctor profile to get ID
+    fetch(`/api/doctors/profile?wallet=${address}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.id) {
+          setDoctorId(data.id);
+          fetchData(data.id);
+        } else {
+          // Doctor not registered, redirect to register
+          router.push("/register-doctor");
+        }
+      })
+      .catch(() => setLoading(false));
+  }, [address, isConnected, router]);
+
+  const fetchData = (id: string) => {
+    // Fetch appointments
+    fetch(`/api/appointments?doctorId=${id}`)
+      .then((res) => res.json())
+      .then(setAppointments)
+      .catch(console.error);
+
+    // Fetch slots
+    fetch(`/api/availability?doctorId=${id}`)
+      .then((res) => res.json())
+      .then(setSlots)
+      .catch(console.error);
+
+    setLoading(false);
+  };
+
+  const handleAddSlot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!doctorId || !newSlotDate || !newSlotStart || !newSlotEnd) return;
+    const res = await fetch("/api/availability", {
+      method: "POST",
+      body: JSON.stringify({ doctorId, date: newSlotDate, startTime: newSlotStart, endTime: newSlotEnd }),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (res.ok) {
+      const slot = await res.json();
+      setSlots([...slots, slot]);
+      setNewSlotDate("");
+      setNewSlotStart("");
+      setNewSlotEnd("");
+    }
+  };
+
+  const handleDeleteSlot = async (id: string) => {
+    if (!confirm("Delete this slot?")) return;
+    await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
+    setSlots(slots.filter((s) => s.id !== id));
+  };
+
+  const updateAppointmentStatus = async (id: string, status: string) => {
+    await fetch(`/api/appointments/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+      headers: { "Content-Type": "application/json" },
+    });
+    setAppointments(appointments.map((a) => (a.id === id ? { ...a, status } : a)));
+  };
+
+  if (!isConnected) {
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
+        <div className="mt-8 text-center py-20">
+          <p className="text-gray-500">Connect your wallet to access the dashboard.</p>
+          <ConnectWallet />
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div className="max-w-6xl mx-auto p-4">Loading...</div>;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Doctor Dashboard</h1>
+        <Link href="/" className="text-primary-600 hover:underline">← Home</Link>
+      </div>
+
+      {/* Profile link */}
+      <div className="mb-4">
+        <Link href="/dashboard/profile" className="text-blue-600 hover:underline">
+          Edit Profile →
+        </Link>
+      </div>
+
+      {/* Appointments */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
+        {appointments.length === 0 && <p className="text-gray-500">No appointments yet.</p>}
+        <div className="grid gap-4">
+          {appointments.map((app) => (
+            <div key={app.id} className="card card-hover">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p><strong>Patient:</strong> {app.patient?.name || "Unknown"}</p>
+                  <p><strong>Date:</strong> {new Date(app.date).toLocaleString()}</p>
+                  <p><strong>Description:</strong> {app.description}</p>
+                  <p className="mt-1">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
+                      app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
+                      app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                      "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {app.status || "PENDING"}
+                    </span>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {app.status === "PENDING" && (
+                    <>
+                      <button
+                        onClick={() => updateAppointmentStatus(app.id, "CONFIRMED")}
+                        className="btn-primary text-sm px-3 py-1"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => updateAppointmentStatus(app.id, "CANCELLED")}
+                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  {app.status === "CONFIRMED" && (
+                    <button
+                      onClick={() => updateAppointmentStatus(app.id, "COMPLETED")}
+                      className="btn-accent text-sm px-3 py-1"
+                    >
+                      Complete
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Availability Slots */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Manage Slots</h2>
+        <form onSubmit={handleAddSlot} className="flex flex-wrap gap-2 mb-4">
+          <input
+            type="date"
+            value={newSlotDate}
+            onChange={(e) => setNewSlotDate(e.target.value)}
+            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            required
+          />
+          <input
+            type="time"
+            value={newSlotStart}
+            onChange={(e) => setNewSlotStart(e.target.value)}
+            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            required
+          />
+          <input
+            type="time"
+            value={newSlotEnd}
+            onChange={(e) => setNewSlotEnd(e.target.value)}
+            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            required
+          />
+          <button type="submit" className="btn-primary">Add Slot</button>
+        </form>
+
+        {slots.length === 0 && <p className="text-gray-500">No slots created yet.</p>}
+        <div className="grid gap-2">
+          {slots.map((slot) => (
+            <div key={slot.id} className="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 rounded">
+              <span>{new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime} {slot.isBooked && "(Booked)"}</span>
+              {!slot.isBooked && (
+                <button
+                  onClick={() => handleDeleteSlot(slot.id)}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

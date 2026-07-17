@@ -17,6 +17,7 @@ enum AppointmentStatus {
   PENDING
   CONFIRMED
   COMPLETED
+  CANCELLED
 }
 
 model User {
@@ -27,7 +28,7 @@ model User {
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
 
-  // Doctor-specific fields
+  // Doctor-specific
   specialty       String?
   hospital        String?
   location        String?
@@ -35,9 +36,24 @@ model User {
   rating          Float?    @default(0)
   yearsExperience Int?
   isActive        Boolean   @default(true)
+  autoConfirm     Boolean   @default(false)  // new: if true, appointments auto-confirm
 
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments  Appointment[] @relation("DoctorAppointments")
+  availability        Availability[]
+}
+
+model Availability {
+  id        String   @id @default(uuid())
+  doctorId  String
+  doctor    User     @relation(fields: [doctorId], references: [id], onDelete: CASCADE)
+  date      DateTime
+  startTime String   // "09:00"
+  endTime   String   // "10:00"
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([doctorId, date])
 }
 
 model Appointment {
@@ -50,12 +66,16 @@ model Appointment {
   status               AppointmentStatus @default(PENDING)
   createdAt            DateTime @default(now())
 
+  // Link to the slot if booked from availability
+  availabilityId       String?  @unique
+  availability         Availability? @relation(fields: [availabilityId], references: [id])
+
   patient User @relation("PatientAppointments", fields: [patientId], references: [id])
   doctor  User @relation("DoctorAppointments",  fields: [doctorId],  references: [id])
 
-  @@index([chainAppointmentId])
   @@index([patientId])
   @@index([doctorId])
+  @@index([status])
 }
 
 model Tip {

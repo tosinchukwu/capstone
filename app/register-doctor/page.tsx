@@ -1,0 +1,125 @@
+"use client";
+import { useState } from "react";
+import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
+
+export default function RegisterDoctor() {
+  const { address, isConnected } = useAccount();
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    specialty: "",
+    hospital: "",
+    location: "",
+    bio: "",
+    yearsExperience: "",
+    autoConfirm: false,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isConnected || !address) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    const payload = { ...form, wallet: address, role: "DOCTOR" };
+    const res = await fetch("/api/doctors/profile", {
+      method: "PUT", // we'll use PUT to create/update
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (res.ok) {
+      alert("Registration successful!");
+      router.push("/dashboard");
+    } else {
+      alert("Registration failed.");
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Register as Doctor</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium">Full Name *</label>
+          <input
+            type="text"
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Specialty *</label>
+          <input
+            type="text"
+            required
+            value={form.specialty}
+            onChange={(e) => setForm({ ...form, specialty: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Hospital</label>
+          <input
+            type="text"
+            value={form.hospital}
+            onChange={(e) => setForm({ ...form, hospital: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Location</label>
+          <input
+            type="text"
+            value={form.location}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Years of Experience</label>
+          <input
+            type="number"
+            value={form.yearsExperience}
+            onChange={(e) => setForm({ ...form, yearsExperience: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Bio</label>
+          <textarea
+            value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            rows={4}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.autoConfirm}
+              onChange={(e) => setForm({ ...form, autoConfirm: e.target.checked })}
+            />
+            Auto-confirm appointments
+          </label>
+        </div>
+        <button type="submit" className="btn-primary w-full">
+          Register
+        </button>
+      </form>
+    </div>
+  );
+}

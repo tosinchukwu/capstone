@@ -17,6 +17,11 @@ export default function Home() {
             🏥 Health Consultation Booking
           </h1>
           <div className="flex items-center gap-3">
+            {isConnected && (
+              <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
+                Dashboard
+              </Link>
+            )}
             <ThemeToggle />
             <ConnectWallet />
           </div>
