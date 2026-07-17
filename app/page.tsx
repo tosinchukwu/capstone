@@ -2,6 +2,7 @@
 import { useAccount } from "wagmi";
 import AppointmentList from "@/components/AppointmentList";
 import ConnectWallet from "@/components/ConnectWallet";
+import HealthTips from "@/components/HealthTips";
 import Link from "next/link";
 
 export default function Home() {
@@ -50,6 +51,11 @@ export default function Home() {
             <AppointmentList />
           </div>
         )}
+
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">💡 Daily Health Tips</h2>
+          <HealthTips />
+        </div>
       </main>
     </div>
   );
