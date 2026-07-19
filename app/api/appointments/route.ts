@@ -27,30 +27,58 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { chainAppointmentId, patientId, doctorId, date, description, status, availabilityId } = body;
+    console.log("📨 Received POST body:", body);
 
-    // Validate required fields
-    if (!chainAppointmentId || !patientId || !doctorId || !date || !description) {
+    const { chainAppointmentId, patientWallet, patientName, doctorId, date, description, status, availabilityId } = body;
+
+    // Check missing fields
+    const missingFields: string[] = [];
+    if (chainAppointmentId === undefined || chainAppointmentId === null) missingFields.push("chainAppointmentId");
+    if (!patientWallet) missingFields.push("patientWallet");
+    if (!doctorId) missingFields.push("doctorId");
+    if (!date) missingFields.push("date");
+    if (!description) missingFields.push("description");
+
+    if (missingFields.length > 0) {
+      console.error("❌ Missing fields:", missingFields);
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: `Missing required fields: ${missingFields.join(", ")}` },
         { status: 400 }
       );
     }
 
-    // Check if patient and doctor exist (optional but good)
-    const patient = await prisma.user.findUnique({ where: { id: patientId } });
+    // Find or create patient
+    let patient = await prisma.user.findUnique({
+      where: { wallet: patientWallet },
+    });
     if (!patient) {
-      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
-    }
-    const doctor = await prisma.user.findUnique({ where: { id: doctorId } });
-    if (!doctor) {
-      return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
+      patient = await prisma.user.create({
+        data: {
+          wallet: patientWallet,
+          name: patientName || "Patient",
+          role: "PATIENT",
+        },
+      });
+    } else {
+      if (patientName && patient.name !== patientName) {
+        patient = await prisma.user.update({
+          where: { wallet: patientWallet },
+          data: { name: patientName },
+        });
+      }
     }
 
-    // Determine status: auto-confirm if doctor has autoConfirm enabled
+    // Check doctor
+    const doctor = await prisma.user.findUnique({
+      where: { id: doctorId },
+    });
+    if (!doctor || doctor.role !== "DOCTOR") {
+      return NextResponse.json({ error: "Doctor not found or not a doctor" }, { status: 404 });
+    }
+
     let finalStatus = status || (doctor.autoConfirm ? "CONFIRMED" : "PENDING");
 
-    // If availabilityId provided, mark slot as booked
+    // Mark slot as booked if provided
     if (availabilityId) {
       const slot = await prisma.availability.findUnique({
         where: { id: availabilityId },
@@ -61,7 +89,6 @@ export async function POST(request: Request) {
       if (slot.isBooked) {
         return NextResponse.json({ error: "Slot already booked" }, { status: 409 });
       }
-      // Mark slot as booked
       await prisma.availability.update({
         where: { id: availabilityId },
         data: { isBooked: true },
@@ -71,8 +98,8 @@ export async function POST(request: Request) {
     // Create appointment
     const appointment = await prisma.appointment.create({
       data: {
-        chainAppointmentId,
-        patientId,
+        chainAppointmentId: BigInt(chainAppointmentId),
+        patientId: patient.id,
         doctorId,
         date: new Date(date),
         description,
@@ -88,9 +115,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
-    console.error("POST /api/appointments error:", error);
+    console.error("❌ POST /api/appointments error:", error);
     return NextResponse.json(
-      { error: "Failed to create appointment" },
+      { error: "Failed to create appointment: " + (error as Error).message },
       { status: 500 }
     );
   }

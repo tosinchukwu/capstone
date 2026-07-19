@@ -72,7 +72,7 @@ export default function AppointmentForm() {
     if (doctor) {
       setSelectedDoctor(doctorId);
       setSelectedDoctorAddress(doctor.wallet);
-      setSelectedDoctorId(doctorId); // ✅ ensure this is set
+      setSelectedDoctorId(doctorId);
       setSelectedSlot("");
     }
   };
@@ -83,6 +83,8 @@ export default function AppointmentForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // --- Validate all fields ---
     if (!address) {
       alert("Please connect your wallet first.");
       return;
@@ -124,21 +126,34 @@ export default function AppointmentForm() {
       return;
     }
 
-    // 2. Save to database
+    // 2. Prepare and validate payload
+    const uniqueId = Date.now();
+    const payload = {
+      chainAppointmentId: uniqueId,
+      patientWallet: address,
+      patientName: patientName,
+      doctorId: selectedDoctorId,
+      date: slot.date,
+      description,
+      availabilityId: selectedSlot,
+      status: "PENDING",
+    };
+
+    // Log payload for debugging
+    console.log("📤 Sending payload:", payload);
+
+    // Ensure all fields are defined
+    const missingFields = Object.entries(payload)
+      .filter(([_, value]) => value === undefined || value === null || value === "")
+      .map(([key]) => key);
+
+    if (missingFields.length > 0) {
+      alert(`Missing fields in payload: ${missingFields.join(", ")}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const uniqueId = Date.now();
-
-      const payload = {
-        chainAppointmentId: uniqueId,
-        patientWallet: address,
-        patientName: patientName,
-        doctorId: selectedDoctorId, // ✅ now correctly populated
-        date: slot.date,
-        description,
-        availabilityId: selectedSlot,
-        status: "PENDING",
-      };
-
       const res = await fetch("/api/appointments", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -149,6 +164,7 @@ export default function AppointmentForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to save appointment");
       }
+      console.log("✅ Appointment saved:", data);
     } catch (err: any) {
       console.error("API call failed:", err);
       alert("Failed to save appointment to database: " + (err.message || "Unknown error"));
