@@ -1,21 +1,32 @@
 "use client";
-import AppointmentDetail from "@/components/AppointmentDetail";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import AppointmentDetail from "@/components/AppointmentDetail";
 
 export default function DetailPage() {
   const { id } = useParams();
-  return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-3xl mx-auto px-4">
-        <Link 
-          href="/" 
-          className="inline-flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 mb-4 transition"
-        >
-          ← Back to Appointments
-        </Link>
-        <AppointmentDetail id={Number(id)} />
-      </div>
-    </div>
-  );
+  const [chainId, setChainId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/appointments/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Appointment not found");
+        return res.json();
+      })
+      .then((data) => {
+        setChainId(Number(data.chainAppointmentId));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch appointment:", err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <div className="p-4">Loading appointment...</div>;
+  if (!chainId) return <div className="p-4">Appointment not found.</div>;
+
+  return <AppointmentDetail id={chainId} />;
 }

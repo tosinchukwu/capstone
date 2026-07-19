@@ -43,6 +43,7 @@ export default function AppointmentForm() {
   const { create, isPending } = useCreateAppointment();
   const { switchChain } = useSwitchChain();
 
+  // Fetch doctors
   useEffect(() => {
     fetch("/api/doctors")
       .then((res) => res.json())
@@ -53,6 +54,7 @@ export default function AppointmentForm() {
       .catch(() => setLoadingDoctors(false));
   }, []);
 
+  // Fetch slots when doctor changes
   useEffect(() => {
     if (!selectedDoctorId) {
       setSlots([]);
@@ -86,29 +88,21 @@ export default function AppointmentForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 0. Validate wallet and network
     if (!isConnected || !address) {
       alert("Please connect your wallet first.");
       return;
     }
     if (chainId !== sepolia.id) {
-      alert(
-        `Please switch to Sepolia (chainId ${sepolia.id}). Your current chain is ${chainId}.`
-      );
+      alert(`Please switch to Sepolia (chainId ${sepolia.id}). Your current chain is ${chainId}.`);
       try {
         await switchChain({ chainId: sepolia.id });
-        alert(
-          "Chain switched to Sepolia. Please click 'Book Appointment' again."
-        );
+        alert("Chain switched to Sepolia. Please click 'Book Appointment' again.");
       } catch (err) {
         console.error("Chain switch failed:", err);
-        alert(
-          "Failed to switch network. Please manually switch to Sepolia."
-        );
+        alert("Failed to switch network. Please manually switch to Sepolia.");
       }
       return;
     }
-
     if (!selectedDoctorAddress) {
       alert("Please select a doctor.");
       return;
@@ -138,16 +132,11 @@ export default function AppointmentForm() {
     const doctorAddress = selectedDoctorAddress as `0x${string}`;
     const bigIntDate = BigInt(dateTimestamp);
 
-    // 1. Call the contract
-    console.log("⛓️ Calling createAppointment with:", {
-      doctorAddress,
-      dateTimestamp,
-      bigIntDate,
-    });
+    console.log("⛓️ Calling createAppointment with:", { doctorAddress, dateTimestamp, bigIntDate });
 
     try {
       await create([doctorAddress, bigIntDate]);
-      console.log("✅ Contract transaction sent successfully.");
+      console.log("✅ Contract transaction sent.");
     } catch (err: any) {
       console.error("❌ Contract call failed:", err);
       alert("Contract call failed: " + (err.message || "Unknown error"));
@@ -155,32 +144,25 @@ export default function AppointmentForm() {
       return;
     }
 
-    // 2. Save to database
     try {
       const uniqueId = Date.now();
       const payload = {
         chainAppointmentId: uniqueId,
         patientWallet: address,
-        patientName: patientName,
+        patientName,
         doctorId: selectedDoctorId,
         date: slot.date,
         description,
         availabilityId: selectedSlot,
         status: "PENDING",
       };
-
-      console.log("📤 Sending payload:", payload);
-
       const res = await fetch("/api/appointments", {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to save appointment");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to save appointment");
       console.log("✅ Appointment saved:", data);
     } catch (err: any) {
       console.error("API call failed:", err);
@@ -225,7 +207,7 @@ export default function AppointmentForm() {
         {selectedDoctor && (
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             <p>Wallet: {selectedDoctorAddress.slice(0, 6)}...{selectedDoctorAddress.slice(-4)}</p>
-            <p>Rating: ⭐ {doctors.find(d => d.id === selectedDoctor)?.rating?.toFixed(1) || "N/A"}</p>
+            <p>Rating: ⭐ {doctors.find((d) => d.id === selectedDoctor)?.rating?.toFixed(1) || "N/A"}</p>
           </div>
         )}
       </div>
