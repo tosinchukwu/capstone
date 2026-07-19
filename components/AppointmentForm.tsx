@@ -41,7 +41,6 @@ export default function AppointmentForm() {
 
   const { create, isPending } = useCreateAppointment();
 
-  // Fetch doctors
   useEffect(() => {
     fetch("/api/doctors")
       .then((res) => res.json())
@@ -52,7 +51,6 @@ export default function AppointmentForm() {
       .catch(() => setLoadingDoctors(false));
   }, []);
 
-  // Fetch slots when doctor is selected
   useEffect(() => {
     if (!selectedDoctorId) {
       setSlots([]);
@@ -74,7 +72,7 @@ export default function AppointmentForm() {
     if (doctor) {
       setSelectedDoctor(doctorId);
       setSelectedDoctorAddress(doctor.wallet);
-      setSelectedDoctorId(doctorId);
+      setSelectedDoctorId(doctorId); // ✅ ensure this is set
       setSelectedSlot("");
     }
   };
@@ -91,6 +89,10 @@ export default function AppointmentForm() {
     }
     if (!selectedDoctorAddress) {
       alert("Please select a doctor.");
+      return;
+    }
+    if (!selectedDoctorId) {
+      alert("Doctor ID is missing. Please select a doctor again.");
       return;
     }
     if (!selectedSlot) {
@@ -126,18 +128,20 @@ export default function AppointmentForm() {
     try {
       const uniqueId = Date.now();
 
+      const payload = {
+        chainAppointmentId: uniqueId,
+        patientWallet: address,
+        patientName: patientName,
+        doctorId: selectedDoctorId, // ✅ now correctly populated
+        date: slot.date,
+        description,
+        availabilityId: selectedSlot,
+        status: "PENDING",
+      };
+
       const res = await fetch("/api/appointments", {
         method: "POST",
-        body: JSON.stringify({
-          chainAppointmentId: uniqueId,
-          patientWallet: address,
-          patientName: patientName,
-          doctorId: selectedDoctorId,
-          date: slot.date,
-          description,
-          availabilityId: selectedSlot,
-          status: "PENDING",
-        }),
+        body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
 

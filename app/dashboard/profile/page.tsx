@@ -1,277 +1,150 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import ConnectWallet from "@/components/ConnectWallet";
+import Link from "next/link";
 
-type Appointment = {
-  id: string;
-  patientName: string;
-  date: string;
-  status: string;
-  description: string;
-  patient: { name: string; wallet: string };
-  doctor: { name: string };
-};
-
-type Slot = {
-  id: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  isBooked: boolean;
-};
-
-export default function DashboardPage() {
+export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [newSlotDate, setNewSlotDate] = useState("");
-  const [newSlotStart, setNewSlotStart] = useState("");
-  const [newSlotEnd, setNewSlotEnd] = useState("");
+  const [profile, setProfile] = useState<any>({});
   const [loading, setLoading] = useState(true);
-  const [doctorId, setDoctorId] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isConnected || !address) return;
-
     fetch(`/api/doctors/profile?wallet=${address}`)
       .then((res) => {
-        if (!res.ok) throw new Error("Doctor profile not found");
+        if (!res.ok) throw new Error("Doctor not found");
         return res.json();
       })
       .then((data) => {
-        if (data.id) {
-          setDoctorId(data.id);
-          fetchData(data.id);
-        } else {
-          router.push("/register-doctor");
-        }
+        setProfile(data);
+        setLoading(false);
       })
       .catch(() => {
         router.push("/register-doctor");
       });
   }, [address, isConnected, router]);
 
-  // ✅ Updated fetchData with proper error handling
-  const fetchData = (id: string) => {
-    // Fetch appointments
-    fetch(`/api/appointments?doctorId=${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch appointments");
-        return res.json();
-      })
-      .then(setAppointments)
-      .catch((err) => {
-        console.error("Error fetching appointments:", err);
-        setAppointments([]); // fallback to empty array
-      });
-
-    // Fetch slots
-    fetch(`/api/availability?doctorId=${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch slots");
-        return res.json();
-      })
-      .then(setSlots)
-      .catch((err) => {
-        console.error("Error fetching slots:", err);
-        setSlots([]); // fallback to empty array
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
-  const handleAddSlot = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!doctorId || !newSlotDate || !newSlotStart || !newSlotEnd) {
-      alert("Please fill all fields.");
-      return;
-    }
+    setSaving(true);
     try {
-      const res = await fetch("/api/availability", {
-        method: "POST",
-        body: JSON.stringify({
-          doctorId,
-          date: newSlotDate,
-          startTime: newSlotStart,
-          endTime: newSlotEnd,
-        }),
+      // ✅ FIX: parse yearsExperience to number or null
+      const payload = {
+        ...profile,
+        wallet: address,
+        yearsExperience: profile.yearsExperience ? parseInt(profile.yearsExperience) : null,
+      };
+
+      const res = await fetch("/api/doctors/profile", {
+        method: "PUT",
+        body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      if (res.ok) {
-        setSlots([...slots, data]);
-        setNewSlotDate("");
-        setNewSlotStart("");
-        setNewSlotEnd("");
-        alert("Slot added successfully!");
-      } else {
-        alert("Failed to add slot: " + (data.error || "Unknown error"));
+      if (!res.ok) {
+        throw new Error(data.error || "Update failed");
       }
-    } catch (error) {
-      console.error("Error adding slot:", error);
-      alert("Error adding slot. Check console.");
+      alert("Profile updated successfully!");
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Update error:", err);
+      alert("Failed to update profile: " + err.message);
+      setSaving(false);
     }
   };
 
-  const handleDeleteSlot = async (id: string) => {
-    if (!confirm("Delete this slot?")) return;
-    const res = await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setSlots(slots.filter((s) => s.id !== id));
-    } else {
-      alert("Failed to delete slot.");
-    }
-  };
-
-  const updateAppointmentStatus = async (id: string, status: string) => {
-    const res = await fetch(`/api/appointments/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ status }),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (res.ok) {
-      setAppointments(appointments.map((a) => (a.id === id ? { ...a, status } : a)));
-    } else {
-      alert("Failed to update appointment.");
-    }
-  };
-
-  if (!isConnected) {
-    return (
-      <div className="max-w-6xl mx-auto p-4">
-        <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
-        <div className="mt-8 text-center py-20">
-          <p className="text-gray-500">Connect your wallet to access the dashboard.</p>
-          <ConnectWallet />
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <div className="max-w-6xl mx-auto p-4">Loading...</div>;
-  }
+  if (!isConnected) return <div className="p-4">Please connect your wallet.</div>;
+  if (loading) return <div className="p-4">Loading...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Doctor Dashboard</h1>
-        <Link href="/" className="text-primary-600 hover:underline">← Home</Link>
+    <div className="max-w-2xl mx-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Edit Doctor Profile</h1>
+        <Link href="/dashboard" className="text-primary-600 hover:underline">← Dashboard</Link>
       </div>
-
-      <div className="mb-4">
-        <Link href="/dashboard/profile" className="text-blue-600 hover:underline">
-          Edit Profile →
-        </Link>
-      </div>
-
-      {/* Appointments */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
-        {appointments.length === 0 && <p className="text-gray-500">No appointments yet.</p>}
-        <div className="grid gap-4">
-          {appointments.map((app) => (
-            <div key={app.id} className="card card-hover">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p><strong>Patient:</strong> {app.patient?.name || "Unknown"}</p>
-                  <p><strong>Date:</strong> {new Date(app.date).toLocaleString()}</p>
-                  <p><strong>Description:</strong> {app.description}</p>
-                  <p className="mt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
-                        app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                          app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                            "bg-yellow-100 text-yellow-800"
-                      }`}>
-                      {app.status || "PENDING"}
-                    </span>
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {app.status === "PENDING" && (
-                    <>
-                      <button
-                        onClick={() => updateAppointmentStatus(app.id, "CONFIRMED")}
-                        className="btn-primary text-sm px-3 py-1"
-                      >
-                        Confirm
-                      </button>
-                      <button
-                        onClick={() => updateAppointmentStatus(app.id, "CANCELLED")}
-                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-                  {app.status === "CONFIRMED" && (
-                    <button
-                      onClick={() => updateAppointmentStatus(app.id, "COMPLETED")}
-                      className="btn-accent text-sm px-3 py-1"
-                    >
-                      Complete
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium">Name</label>
+          <input
+            type="text"
+            value={profile.name || ""}
+            onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            required
+          />
         </div>
-      </div>
-
-      {/* Availability Slots */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Manage Slots</h2>
-        <form onSubmit={handleAddSlot} className="flex flex-wrap gap-2 mb-4">
+        <div>
+          <label className="block text-sm font-medium">Email</label>
           <input
-            type="date"
-            value={newSlotDate}
-            onChange={(e) => setNewSlotDate(e.target.value)}
-            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-            required
+            type="email"
+            value={profile.email || ""}
+            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
           />
-          <input
-            type="time"
-            value={newSlotStart}
-            onChange={(e) => setNewSlotStart(e.target.value)}
-            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-            required
-          />
-          <input
-            type="time"
-            value={newSlotEnd}
-            onChange={(e) => setNewSlotEnd(e.target.value)}
-            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-            required
-          />
-          <button type="submit" className="btn-primary">Add Slot</button>
-        </form>
-
-        {slots.length === 0 && <p className="text-gray-500">No slots created yet.</p>}
-        <div className="grid gap-2">
-          {slots.map((slot) => (
-            <div key={slot.id} className="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 rounded">
-              <span>
-                {new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime}
-                {slot.isBooked && " (Booked)"}
-              </span>
-              {!slot.isBooked && (
-                <button
-                  onClick={() => handleDeleteSlot(slot.id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          ))}
         </div>
-      </div>
+        <div>
+          <label className="block text-sm font-medium">Specialty</label>
+          <input
+            type="text"
+            value={profile.specialty || ""}
+            onChange={(e) => setProfile({ ...profile, specialty: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Hospital</label>
+          <input
+            type="text"
+            value={profile.hospital || ""}
+            onChange={(e) => setProfile({ ...profile, hospital: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Location</label>
+          <input
+            type="text"
+            value={profile.location || ""}
+            onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Years of Experience</label>
+          <input
+            type="number"
+            value={profile.yearsExperience || ""}
+            onChange={(e) => setProfile({ ...profile, yearsExperience: e.target.value })}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Bio</label>
+          <textarea
+            value={profile.bio || ""}
+            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+            rows={4}
+            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+          />
+        </div>
+        <div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={profile.autoConfirm || false}
+              onChange={(e) => setProfile({ ...profile, autoConfirm: e.target.checked })}
+            />
+            Auto-confirm appointments
+          </label>
+        </div>
+        <button type="submit" className="btn-primary w-full" disabled={saving}>
+          {saving ? "Saving..." : "Update Profile"}
+        </button>
+      </form>
     </div>
   );
 }
+EOF

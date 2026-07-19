@@ -38,36 +38,46 @@ export default function DashboardPage() {
     if (!isConnected || !address) return;
 
     fetch(`/api/doctors/profile?wallet=${address}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Doctor profile not found");
+        return res.json();
+      })
       .then((data) => {
         if (data.id) {
           setDoctorId(data.id);
           fetchData(data.id);
         } else {
-          // Doctor not registered, redirect to register
           router.push("/register-doctor");
         }
       })
       .catch(() => {
-        setLoading(false);
         router.push("/register-doctor");
       });
   }, [address, isConnected, router]);
 
-  const fetchData = (id: string) => {
-    // Fetch appointments
-    fetch(`/api/appointments?doctorId=${id}`)
-      .then((res) => res.json())
-      .then(setAppointments)
-      .catch(console.error);
+  // ✅ Optimized: fetch appointments and slots in parallel
+  const fetchData = async (id: string) => {
+    try {
+      const [appointmentsRes, slotsRes] = await Promise.all([
+        fetch(`/api/appointments?doctorId=${id}`),
+        fetch(`/api/availability?doctorId=${id}`),
+      ]);
 
-    // Fetch slots
-    fetch(`/api/availability?doctorId=${id}`)
-      .then((res) => res.json())
-      .then(setSlots)
-      .catch(console.error);
+      if (!appointmentsRes.ok) throw new Error("Failed to fetch appointments");
+      if (!slotsRes.ok) throw new Error("Failed to fetch slots");
 
-    setLoading(false);
+      const appointmentsData = await appointmentsRes.json();
+      const slotsData = await slotsRes.json();
+
+      setAppointments(appointmentsData);
+      setSlots(slotsData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setAppointments([]);
+      setSlots([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddSlot = async (e: React.FormEvent) => {
@@ -87,16 +97,15 @@ export default function DashboardPage() {
         }),
         headers: { "Content-Type": "application/json" },
       });
+      const data = await res.json();
       if (res.ok) {
-        const slot = await res.json();
-        setSlots([...slots, slot]);
+        setSlots([...slots, data]);
         setNewSlotDate("");
         setNewSlotStart("");
         setNewSlotEnd("");
         alert("Slot added successfully!");
       } else {
-        const err = await res.text();
-        alert("Failed to add slot: " + err);
+        alert("Failed to add slot: " + (data.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error adding slot:", error);
