@@ -55,7 +55,6 @@ export default function DashboardPage() {
       });
   }, [address, isConnected, router]);
 
-  // ✅ Optimized: fetch appointments and slots in parallel
   const fetchData = async (id: string) => {
     try {
       const [appointmentsRes, slotsRes] = await Promise.all([
@@ -124,15 +123,22 @@ export default function DashboardPage() {
   };
 
   const updateAppointmentStatus = async (id: string, status: string) => {
-    const res = await fetch(`/api/appointments/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ status }),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (res.ok) {
-      setAppointments(appointments.map((a) => (a.id === id ? { ...a, status } : a)));
-    } else {
-      alert("Failed to update appointment.");
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        // ✅ Refresh appointments list to reflect changes
+        if (doctorId) fetchData(doctorId);
+      } else {
+        const data = await res.json();
+        alert("Failed to update appointment: " + (data.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      alert("Error updating appointment. Check console.");
     }
   };
 
@@ -165,7 +171,6 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Appointments */}
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
         {appointments.length === 0 && <p className="text-gray-500">No appointments yet.</p>}
@@ -219,7 +224,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Availability Slots */}
       <div>
         <h2 className="text-2xl font-semibold mb-4">Manage Slots</h2>
         <form onSubmit={handleAddSlot} className="flex flex-wrap gap-2 mb-4">

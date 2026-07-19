@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -15,15 +16,20 @@ type AppointmentContract = {
 export default function AppointmentDetail({ id }: { id: number }) {
   const { address } = useAccount();
   const [dbData, setDbData] = useState<any>(null);
-  const { data: contractData, refetch } = useGetAppointment(id);
-  
+
+  // ✅ Prevent NaN by using a fallback
+  const validId = Number.isInteger(id) && id >= 0 ? id : 0;
+
+  const { data: contractData, refetch } = useGetAppointment(validId);
   const { confirm, isPending: confirmPending } = useConfirmAppointment();
   const { complete, isPending: completePending } = useCompleteAppointment();
 
   useEffect(() => {
+    if (!Number.isInteger(id) || id < 0) return;
     fetch(`/api/appointments/${id}`)
-      .then(res => res.json())
-      .then(setDbData);
+      .then((res) => res.json())
+      .then(setDbData)
+      .catch(console.error);
   }, [id]);
 
   if (!dbData || !contractData) return <div>Loading...</div>;
@@ -32,18 +38,18 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const { patient, doctor, isConfirmed, isCompleted } = data;
 
   const handleConfirm = () => {
-    confirm([BigInt(id)]);
+    confirm([BigInt(validId)]);
     setTimeout(refetch, 5000);
   };
 
   const handleComplete = () => {
-    complete([BigInt(id)]);
+    complete([BigInt(validId)]);
     setTimeout(refetch, 5000);
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold">Appointment #{id}</h1>
+      <h1 className="text-2xl font-bold">Appointment #{validId}</h1>
       <p><strong>Patient:</strong> {dbData.patientName} ({patient})</p>
       <p><strong>Doctor:</strong> {dbData.doctorAddress}</p>
       <p><strong>Description:</strong> {dbData.description}</p>
