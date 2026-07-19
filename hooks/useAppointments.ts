@@ -1,9 +1,12 @@
-import { useReadContract, useWriteContract } from "wagmi";
+import { useWriteContract, useReadContract } from "wagmi";
 import { contractConfig } from "@/lib/contract";
+
+// ----- Write hooks -----
 
 export function useCreateAppointment() {
   const { writeContract, isPending } = useWriteContract();
   const create = (args: any[]) => {
+    console.log("⛓️ writeContract called for createAppointment with args:", args);
     writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
@@ -17,6 +20,7 @@ export function useCreateAppointment() {
 export function useConfirmAppointment() {
   const { writeContract, isPending } = useWriteContract();
   const confirm = (args: any[]) => {
+    console.log("⛓️ writeContract called for confirmAppointment with args:", args);
     writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
@@ -30,6 +34,7 @@ export function useConfirmAppointment() {
 export function useCompleteAppointment() {
   const { writeContract, isPending } = useWriteContract();
   const complete = (args: any[]) => {
+    console.log("⛓️ writeContract called for completeAppointment with args:", args);
     writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
@@ -39,6 +44,8 @@ export function useCompleteAppointment() {
   };
   return { complete, isPending };
 }
+
+// ----- Read hook -----
 
 export function useGetAppointment(id: number) {
   const result = useReadContract({
