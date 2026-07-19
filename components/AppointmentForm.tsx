@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { useCreateAppointment } from "@/hooks/useAppointments";
 import { useRouter } from "next/navigation";
+import { sepolia } from "viem/chains";
 
 type Doctor = {
   id: string;
@@ -25,7 +26,7 @@ type Slot = {
 };
 
 export default function AppointmentForm() {
-  const { address } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -40,6 +41,7 @@ export default function AppointmentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { create, isPending } = useCreateAppointment();
+  const { switchChain } = useSwitchChain();
 
   useEffect(() => {
     fetch("/api/doctors")
@@ -84,11 +86,29 @@ export default function AppointmentForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // --- Validate all fields ---
-    if (!address) {
+    // 0. Validate wallet and network
+    if (!isConnected || !address) {
       alert("Please connect your wallet first.");
       return;
     }
+    if (chainId !== sepolia.id) {
+      alert(
+        `Please switch to Sepolia (chainId ${sepolia.id}). Your current chain is ${chainId}.`
+      );
+      try {
+        await switchChain({ chainId: sepolia.id });
+        alert(
+          "Chain switched to Sepolia. Please click 'Book Appointment' again."
+        );
+      } catch (err) {
+        console.error("Chain switch failed:", err);
+        alert(
+          "Failed to switch network. Please manually switch to Sepolia."
+        );
+      }
+      return;
+    }
+
     if (!selectedDoctorAddress) {
       alert("Please select a doctor.");
       return;
@@ -115,45 +135,42 @@ export default function AppointmentForm() {
     setIsSubmitting(true);
 
     const dateTimestamp = Math.floor(new Date(slot.date).getTime() / 1000);
+    const doctorAddress = selectedDoctorAddress as `0x${string}`;
+    const bigIntDate = BigInt(dateTimestamp);
 
     // 1. Call the contract
+    console.log("⛓️ Calling createAppointment with:", {
+      doctorAddress,
+      dateTimestamp,
+      bigIntDate,
+    });
+
     try {
-      await create([selectedDoctorAddress as `0x${string}`, BigInt(dateTimestamp)]);
+      await create([doctorAddress, bigIntDate]);
+      console.log("✅ Contract transaction sent successfully.");
     } catch (err: any) {
-      console.error("Contract call failed:", err);
+      console.error("❌ Contract call failed:", err);
       alert("Contract call failed: " + (err.message || "Unknown error"));
       setIsSubmitting(false);
       return;
     }
 
-    // 2. Prepare and validate payload
-    const uniqueId = Date.now();
-    const payload = {
-      chainAppointmentId: uniqueId,
-      patientWallet: address,
-      patientName: patientName,
-      doctorId: selectedDoctorId,
-      date: slot.date,
-      description,
-      availabilityId: selectedSlot,
-      status: "PENDING",
-    };
-
-    // Log payload for debugging
-    console.log("📤 Sending payload:", payload);
-
-    // Ensure all fields are defined
-    const missingFields = Object.entries(payload)
-      .filter(([_, value]) => value === undefined || value === null || value === "")
-      .map(([key]) => key);
-
-    if (missingFields.length > 0) {
-      alert(`Missing fields in payload: ${missingFields.join(", ")}`);
-      setIsSubmitting(false);
-      return;
-    }
-
+    // 2. Save to database
     try {
+      const uniqueId = Date.now();
+      const payload = {
+        chainAppointmentId: uniqueId,
+        patientWallet: address,
+        patientName: patientName,
+        doctorId: selectedDoctorId,
+        date: slot.date,
+        description,
+        availabilityId: selectedSlot,
+        status: "PENDING",
+      };
+
+      console.log("📤 Sending payload:", payload);
+
       const res = await fetch("/api/appointments", {
         method: "POST",
         body: JSON.stringify(payload),
