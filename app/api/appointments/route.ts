@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Helper to convert BigInt to string in an object
+function serializeBigInt(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'bigint') return obj.toString();
+  if (Array.isArray(obj)) return obj.map(serializeBigInt);
+  if (typeof obj === 'object') {
+    const result: any = {};
+    for (const key in obj) {
+      result[key] = serializeBigInt(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const patientId = searchParams.get("patientId");
@@ -21,7 +36,10 @@ export async function GET(request: Request) {
     },
     orderBy: { date: "asc" },
   });
-  return NextResponse.json(appointments);
+
+  // Convert BigInt to string for JSON response
+  const serialized = serializeBigInt(appointments);
+  return NextResponse.json(serialized);
 }
 
 export async function POST(request: Request) {
@@ -31,7 +49,7 @@ export async function POST(request: Request) {
 
     const { chainAppointmentId, patientWallet, patientName, doctorId, date, description, status, availabilityId } = body;
 
-    // Check missing fields
+    // Validate fields
     const missingFields: string[] = [];
     if (chainAppointmentId === undefined || chainAppointmentId === null) missingFields.push("chainAppointmentId");
     if (!patientWallet) missingFields.push("patientWallet");
@@ -113,7 +131,9 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(appointment, { status: 201 });
+    // Serialize BigInt to string before sending response
+    const serialized = serializeBigInt(appointment);
+    return NextResponse.json(serialized, { status: 201 });
   } catch (error) {
     console.error("❌ POST /api/appointments error:", error);
     return NextResponse.json(

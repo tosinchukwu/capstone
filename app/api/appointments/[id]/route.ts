@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function serializeBigInt(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'bigint') return obj.toString();
+  if (Array.isArray(obj)) return obj.map(serializeBigInt);
+  if (typeof obj === 'object') {
+    const result: any = {};
+    for (const key in obj) {
+      result[key] = serializeBigInt(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
 export async function GET(
   _: Request,
   { params }: { params: { id: string } }
@@ -12,7 +26,8 @@ export async function GET(
   if (!appointment) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json(appointment);
+  const serialized = serializeBigInt(appointment);
+  return NextResponse.json(serialized);
 }
 
 export async function PUT(
@@ -32,7 +47,8 @@ export async function PUT(
     data,
     include: { patient: true, doctor: true },
   });
-  return NextResponse.json(updated);
+  const serialized = serializeBigInt(updated);
+  return NextResponse.json(serialized);
 }
 
 export async function DELETE(
