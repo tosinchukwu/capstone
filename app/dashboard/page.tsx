@@ -79,6 +79,14 @@ export default function DashboardPage() {
     }
   };
 
+  const refreshSlots = async () => {
+    if (doctorId) {
+      setLoading(true);
+      await fetchData(doctorId);
+      setLoading(false);
+    }
+  };
+
   const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!doctorId || !newSlotDate || !newSlotStart || !newSlotEnd) {
@@ -122,7 +130,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ Updated with robust error handling
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       const res = await fetch(`/api/appointments/${id}`, {
@@ -130,20 +137,15 @@ export default function DashboardPage() {
         body: JSON.stringify({ status }),
         headers: { "Content-Type": "application/json" },
       });
-
-      // Attempt to parse JSON – handle parsing errors gracefully
       let data;
       try {
         data = await res.json();
       } catch (parseError) {
         throw new Error(`Server returned ${res.status}: ${res.statusText}`);
       }
-
       if (!res.ok) {
         throw new Error(data.error || "Failed to update appointment");
       }
-
-      // Refresh appointments after successful update
       if (doctorId) fetchData(doctorId);
     } catch (error) {
       console.error("Error updating appointment:", error);
@@ -234,7 +236,15 @@ export default function DashboardPage() {
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Manage Slots</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold">Manage Slots</h2>
+          <button
+            onClick={refreshSlots}
+            className="btn-secondary text-sm px-3 py-1"
+          >
+            Refresh Slots
+          </button>
+        </div>
         <form onSubmit={handleAddSlot} className="flex flex-wrap gap-2 mb-4">
           <input
             type="date"

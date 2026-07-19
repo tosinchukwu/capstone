@@ -32,7 +32,12 @@ export default function AppointmentForm() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("selectedDoctorId") || "";
+    }
+    return "";
+  });
   const [selectedSlot, setSelectedSlot] = useState("");
   const [patientName, setPatientName] = useState("");
   const [description, setDescription] = useState("");
@@ -54,7 +59,22 @@ export default function AppointmentForm() {
       .catch(() => setLoadingDoctors(false));
   }, []);
 
-  // Fetch slots when doctor changes
+  // Auto‑select doctor if stored ID matches
+  useEffect(() => {
+    if (doctors.length > 0 && selectedDoctor) {
+      const doctor = doctors.find((d) => d.id === selectedDoctor);
+      if (doctor) {
+        setSelectedDoctorAddress(doctor.wallet);
+        setSelectedDoctorId(doctor.id);
+      } else {
+        // stored doctor no longer exists
+        localStorage.removeItem("selectedDoctorId");
+        setSelectedDoctor("");
+      }
+    }
+  }, [doctors, selectedDoctor]);
+
+  // Fetch slots when doctor is selected
   useEffect(() => {
     if (!selectedDoctorId) {
       setSlots([]);
@@ -78,6 +98,7 @@ export default function AppointmentForm() {
       setSelectedDoctorAddress(doctor.wallet);
       setSelectedDoctorId(doctorId);
       setSelectedSlot("");
+      localStorage.setItem("selectedDoctorId", doctorId);
     }
   };
 
@@ -93,10 +114,10 @@ export default function AppointmentForm() {
       return;
     }
     if (chainId !== sepolia.id) {
-      alert(`Please switch to Sepolia (chainId ${sepolia.id}). Your current chain is ${chainId}.`);
+      alert(`Please switch to Sepolia. Your current chain is ${chainId}.`);
       try {
         await switchChain({ chainId: sepolia.id });
-        alert("Chain switched to Sepolia. Please click 'Book Appointment' again.");
+        alert("Chain switched to Sepolia. Click 'Book Appointment' again.");
       } catch (err) {
         console.error("Chain switch failed:", err);
         alert("Failed to switch network. Please manually switch to Sepolia.");
@@ -144,6 +165,7 @@ export default function AppointmentForm() {
       return;
     }
 
+    // Save to database
     try {
       const uniqueId = Date.now();
       const payload = {
@@ -156,6 +178,7 @@ export default function AppointmentForm() {
         availabilityId: selectedSlot,
         status: "PENDING",
       };
+      console.log("📤 Sending payload:", payload);
       const res = await fetch("/api/appointments", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -166,7 +189,7 @@ export default function AppointmentForm() {
       console.log("✅ Appointment saved:", data);
     } catch (err: any) {
       console.error("API call failed:", err);
-      alert("Failed to save appointment to database: " + (err.message || "Unknown error"));
+      alert("Failed to save appointment to database: " + err.message);
       setIsSubmitting(false);
       return;
     }
@@ -178,9 +201,8 @@ export default function AppointmentForm() {
   if (loadingDoctors) {
     return <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading doctors...</div>;
   }
-
   if (doctors.length === 0) {
-    return <div className="text-center py-8 text-gray-600 dark:text-gray-400">No doctors available yet.</div>;
+    return <div className="text-center py-8 text-gray-600 dark:text-gray-400">No doctors available.</div>;
   }
 
   return (
@@ -188,9 +210,7 @@ export default function AppointmentForm() {
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Appointment</h1>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Select Doctor
-        </label>
+        <label className="block text-sm font-medium">Select Doctor</label>
         <select
           value={selectedDoctor}
           onChange={handleDoctorSelect}
@@ -207,16 +227,14 @@ export default function AppointmentForm() {
         {selectedDoctor && (
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             <p>Wallet: {selectedDoctorAddress.slice(0, 6)}...{selectedDoctorAddress.slice(-4)}</p>
-            <p>Rating: ⭐ {doctors.find((d) => d.id === selectedDoctor)?.rating?.toFixed(1) || "N/A"}</p>
+            <p>Rating: ⭐ {doctors.find(d => d.id === selectedDoctor)?.rating?.toFixed(1) || "N/A"}</p>
           </div>
         )}
       </div>
 
       {selectedDoctorId && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Available Slots
-          </label>
+          <label className="block text-sm font-medium">Available Slots</label>
           {loadingSlots ? (
             <p className="text-sm text-gray-500">Loading slots...</p>
           ) : slots.length === 0 ? (
@@ -225,7 +243,7 @@ export default function AppointmentForm() {
             <select
               value={selectedSlot}
               onChange={handleSlotSelect}
-              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+              className="w-full p-2 border rounded-lg"
               required
             >
               <option value="">Select a slot...</option>
@@ -240,28 +258,24 @@ export default function AppointmentForm() {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Your Name
-        </label>
+        <label className="block text-sm font-medium">Your Name</label>
         <input
           type="text"
           placeholder="Enter your full name"
           value={patientName}
           onChange={(e) => setPatientName(e.target.value)}
-          className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+          className="w-full p-2 border rounded-lg"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Description / Symptoms
-        </label>
+        <label className="block text-sm font-medium">Description / Symptoms</label>
         <textarea
-          placeholder="Describe your symptoms or reason for consultation"
+          placeholder="Describe your symptoms"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+          className="w-full p-2 border rounded-lg"
           rows={4}
           required
         />
