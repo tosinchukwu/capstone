@@ -1,12 +1,12 @@
 import { useWriteContract, useReadContract } from "wagmi";
 import { contractConfig } from "@/lib/contract";
 
-// ----- WRITE HOOKS -----
+// ----- WRITE HOOKS (No async, no await) -----
 
 export function useCreateAppointment() {
   const { writeContract, isPending, error } = useWriteContract();
 
-  const create = async (args: any[]) => {
+  const create = (args: any[]) => {
     console.log("⛓️ create() called with args:", args);
     console.log("⛓️ contractConfig:", contractConfig);
 
@@ -19,23 +19,18 @@ export function useCreateAppointment() {
       throw new Error("ABI not configured");
     }
 
-    try {
-      console.log("⛓️ Calling writeContract with:", {
-        address: contractConfig.address,
-        functionName: "createAppointment",
-        args,
-      });
-      await writeContract({
-        address: contractConfig.address,
-        abi: contractConfig.abi,
-        functionName: "createAppointment",
-        args,
-      });
-      console.log("✅ writeContract executed successfully.");
-    } catch (err) {
-      console.error("❌ writeContract threw an error:", err);
-      throw err;
-    }
+    console.log("⛓️ Calling writeContract with:", {
+      address: contractConfig.address,
+      functionName: "createAppointment",
+      args,
+    });
+    writeContract({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "createAppointment",
+      args,
+    });
+    console.log("✅ writeContract called – waiting for wallet...");
   };
 
   return { create, isPending, error };
@@ -44,19 +39,14 @@ export function useCreateAppointment() {
 export function useConfirmAppointment() {
   const { writeContract, isPending, error } = useWriteContract();
 
-  const confirm = async (args: any[]) => {
+  const confirm = (args: any[]) => {
     console.log("⛓️ confirm() called with args:", args);
-    try {
-      await writeContract({
-        address: contractConfig.address,
-        abi: contractConfig.abi,
-        functionName: "confirmAppointment",
-        args,
-      });
-    } catch (err) {
-      console.error("❌ confirm error:", err);
-      throw err;
-    }
+    writeContract({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "confirmAppointment",
+      args,
+    });
   };
   return { confirm, isPending, error };
 }
@@ -64,19 +54,14 @@ export function useConfirmAppointment() {
 export function useCompleteAppointment() {
   const { writeContract, isPending, error } = useWriteContract();
 
-  const complete = async (args: any[]) => {
+  const complete = (args: any[]) => {
     console.log("⛓️ complete() called with args:", args);
-    try {
-      await writeContract({
-        address: contractConfig.address,
-        abi: contractConfig.abi,
-        functionName: "completeAppointment",
-        args,
-      });
-    } catch (err) {
-      console.error("❌ complete error:", err);
-      throw err;
-    }
+    writeContract({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "completeAppointment",
+      args,
+    });
   };
   return { complete, isPending, error };
 }

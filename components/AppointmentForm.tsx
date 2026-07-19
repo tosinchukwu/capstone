@@ -135,8 +135,8 @@ export default function AppointmentForm() {
     console.log("⛓️ Calling createAppointment with:", { doctorAddress, dateTimestamp, bigIntDate });
 
     try {
-      await create([doctorAddress, bigIntDate]);
-      console.log("✅ Contract transaction sent.");
+      create([doctorAddress, bigIntDate]);
+      console.log("✅ Contract transaction initiated.");
     } catch (err: any) {
       console.error("❌ Contract call failed:", err);
       alert("Contract call failed: " + (err.message || "Unknown error"));

@@ -3,82 +3,153 @@ import { prisma } from "@/lib/prisma";
 
 // GET – fetch doctor profile
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const wallet = searchParams.get("wallet");
-  if (!wallet) {
-    return NextResponse.json({ error: "Wallet address required" }, { status: 400 });
-  }
+  try {
+    const { searchParams } = new URL(request.url);
+    const wallet = searchParams.get("wallet");
 
-  const doctor = await prisma.user.findUnique({
-    where: { wallet },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      wallet: true,
-      specialty: true,
-      hospital: true,
-      location: true,
-      bio: true,
-      rating: true,
-      yearsExperience: true,
-      isActive: true,
-      autoConfirm: true,
-    },
-  });
-  if (!doctor) {
-    return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
+    if (!wallet) {
+      return NextResponse.json(
+        { error: "Wallet address required" },
+        { status: 400 }
+      );
+    }
+
+    const doctor = await prisma.user.findUnique({
+      where: { wallet },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        wallet: true,
+        specialty: true,
+        hospital: true,
+        location: true,
+        bio: true,
+        rating: true,
+        yearsExperience: true,
+        isActive: true,
+        autoConfirm: true,
+      },
+    });
+
+    if (!doctor) {
+      return NextResponse.json(
+        { error: "Doctor not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(doctor);
+  } catch (error) {
+    console.error("❌ GET /api/doctors/profile error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
-  return NextResponse.json(doctor);
 }
 
 // PUT – create or update doctor profile
 export async function PUT(request: Request) {
-  const body = await request.json();
-  const { wallet, name, email, specialty, hospital, location, bio, yearsExperience, autoConfirm } = body;
+  try {
+    const body = await request.json();
+    console.log("📨 PUT /api/doctors/profile body:", body);
 
-  if (!wallet) {
-    return NextResponse.json({ error: "Wallet address required" }, { status: 400 });
-  }
+    const {
+      wallet,
+      name,
+      email,
+      specialty,
+      hospital,
+      location,
+      bio,
+      yearsExperience,
+      autoConfirm,
+    } = body;
 
-  // Check if user exists
-  const existingUser = await prisma.user.findUnique({
-    where: { wallet },
-  });
+    // Validate required fields
+    if (!wallet) {
+      return NextResponse.json(
+        { error: "Wallet address is required" },
+        { status: 400 }
+      );
+    }
 
-  let updatedUser;
-  if (existingUser) {
-    // Update existing user to doctor
-    updatedUser = await prisma.user.update({
+    if (!name) {
+      return NextResponse.json(
+        { error: "Name is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!specialty) {
+      return NextResponse.json(
+        { error: "Specialty is required" },
+        { status: 400 }
+      );
+    }
+
+    // Parse yearsExperience safely
+    let parsedYears = null;
+    if (yearsExperience !== undefined && yearsExperience !== null && yearsExperience !== "") {
+      parsedYears = parseInt(yearsExperience);
+      if (isNaN(parsedYears)) {
+        return NextResponse.json(
+          { error: "Years of experience must be a valid number" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
       where: { wallet },
-      data: {
-        name,
-        email,
-        specialty,
-        hospital,
-        location,
-        bio,
-        yearsExperience: yearsExperience ? parseInt(yearsExperience) : undefined,
-        autoConfirm,
-        role: "DOCTOR",
-      },
     });
-  } else {
-    // Create new doctor
-    updatedUser = await prisma.user.create({
-      data: {
-        wallet,
-        name,
-        email,
-        specialty,
-        hospital,
-        location,
-        bio,
-        yearsExperience: yearsExperience ? parseInt(yearsExperience) : undefined,
-        autoConfirm,
-        role: "DOCTOR",
-      },
-    });
+
+    let updatedUser;
+
+    if (existingUser) {
+      // Update existing user
+      updatedUser = await prisma.user.update({
+        where: { wallet },
+        data: {
+          name,
+          email: email || null,
+          specialty,
+          hospital: hospital || null,
+          location: location || null,
+          bio: bio || null,
+          yearsExperience: parsedYears,
+          autoConfirm: autoConfirm ?? false,
+          role: "DOCTOR",
+        },
+      });
+      console.log("✅ Doctor profile updated:", updatedUser.id);
+    } else {
+      // Create new doctor
+      updatedUser = await prisma.user.create({
+        data: {
+          wallet,
+          name,
+          email: email || null,
+          specialty,
+          hospital: hospital || null,
+          location: location || null,
+          bio: bio || null,
+          yearsExperience: parsedYears,
+          autoConfirm: autoConfirm ?? false,
+          role: "DOCTOR",
+        },
+      });
+      console.log("✅ New doctor created:", updatedUser.id);
+    }
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error("❌ PUT /api/doctors/profile error:", error);
+    return NextResponse.json(
+      { error: "Failed to update profile: " + (error as Error).message },
+      { status: 500 }
+    );
   }
-  return NextResponse.json(updatedUser);
 }
