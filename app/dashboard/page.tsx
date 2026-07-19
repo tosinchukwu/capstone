@@ -122,6 +122,7 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ Updated with robust error handling
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       const res = await fetch(`/api/appointments/${id}`, {
@@ -129,16 +130,24 @@ export default function DashboardPage() {
         body: JSON.stringify({ status }),
         headers: { "Content-Type": "application/json" },
       });
-      if (res.ok) {
-        // ✅ Refresh appointments list to reflect changes
-        if (doctorId) fetchData(doctorId);
-      } else {
-        const data = await res.json();
-        alert("Failed to update appointment: " + (data.error || "Unknown error"));
+
+      // Attempt to parse JSON – handle parsing errors gracefully
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
       }
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update appointment");
+      }
+
+      // Refresh appointments after successful update
+      if (doctorId) fetchData(doctorId);
     } catch (error) {
       console.error("Error updating appointment:", error);
-      alert("Error updating appointment. Check console.");
+      alert("Failed to update appointment: " + (error as Error).message);
     }
   };
 
