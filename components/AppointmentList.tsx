@@ -2,18 +2,33 @@
 import { useEffect, useState } from "react";
 import AppointmentCard from "./AppointmentCard";
 
+type Appointment = {
+  id: string;
+  patient: { name: string; wallet: string } | null;
+  doctor: { name: string; wallet: string } | null;
+  date: string | null;
+  status: string;
+  description: string;
+};
+
 export default function AppointmentList() {
-  const [appointments, setAppointments] = useState([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/appointments")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch appointments");
+        return res.json();
+      })
       .then((data) => {
         setAppointments(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("Error fetching appointments:", err);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
@@ -39,7 +54,7 @@ export default function AppointmentList() {
 
   return (
     <div className="grid gap-4">
-      {appointments.map((app: any) => (
+      {appointments.map((app) => (
         <AppointmentCard key={app.id} appointment={app} />
       ))}
     </div>
