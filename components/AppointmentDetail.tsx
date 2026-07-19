@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -16,10 +15,7 @@ type AppointmentContract = {
 export default function AppointmentDetail({ id }: { id: number }) {
   const { address } = useAccount();
   const [dbData, setDbData] = useState<any>(null);
-
-  // ✅ Prevent NaN by using a fallback
   const validId = Number.isInteger(id) && id >= 0 ? id : 0;
-
   const { data: contractData, refetch } = useGetAppointment(validId);
   const { confirm, isPending: confirmPending } = useConfirmAppointment();
   const { complete, isPending: completePending } = useCompleteAppointment();
@@ -37,6 +33,10 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const data = contractData as unknown as AppointmentContract;
   const { patient, doctor, isConfirmed, isCompleted } = data;
 
+  // Safe date formatting
+  const dbDate = dbData.date ? new Date(dbData.date).toLocaleString() : "Not set";
+  const contractDate = data.date ? new Date(Number(data.date) * 1000).toLocaleString() : "N/A";
+
   const handleConfirm = () => {
     confirm([BigInt(validId)]);
     setTimeout(refetch, 5000);
@@ -50,10 +50,11 @@ export default function AppointmentDetail({ id }: { id: number }) {
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold">Appointment #{validId}</h1>
-      <p><strong>Patient:</strong> {dbData.patientName} ({patient})</p>
-      <p><strong>Doctor:</strong> {dbData.doctorAddress}</p>
-      <p><strong>Description:</strong> {dbData.description}</p>
-      <p><strong>Date:</strong> {new Date(dbData.date).toLocaleString()}</p>
+      <p><strong>Patient:</strong> {dbData.patientName || "Unknown"} ({patient})</p>
+      <p><strong>Doctor:</strong> {dbData.doctorAddress || "Unknown"}</p>
+      <p><strong>Description:</strong> {dbData.description || "No description"}</p>
+      <p><strong>Date (DB):</strong> {dbDate}</p>
+      <p><strong>Date (Contract):</strong> {contractDate}</p>
       <p><strong>Status:</strong> {isCompleted ? "Completed" : isConfirmed ? "Confirmed" : "Pending"}</p>
 
       {doctor === address && !isConfirmed && (
