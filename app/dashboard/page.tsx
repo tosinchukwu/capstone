@@ -35,8 +35,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
 
-  const { confirm, isPending: confirmPending } = useConfirmAppointment();
-  const { complete, isPending: completePending } = useCompleteAppointment();
+  // ✅ Rename to avoid shadowing window.confirm
+  const { confirm: confirmAppointment, isPending: confirmPending } = useConfirmAppointment();
+  const { complete: completeAppointment, isPending: completePending } = useCompleteAppointment();
 
   useEffect(() => {
     if (!isConnected || !address) return;
@@ -125,7 +126,8 @@ export default function DashboardPage() {
   };
 
   const handleDeleteSlot = async (id: string) => {
-    if (!confirm("Delete this slot?")) return;
+    // ✅ Use window.confirm to avoid shadowing
+    if (!window.confirm("Delete this slot?")) return;
     const res = await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
     if (res.ok) {
       setSlots(slots.filter((s) => s.id !== id));
@@ -146,13 +148,13 @@ export default function DashboardPage() {
         const chainId = typeof app.chainAppointmentId === 'string'
           ? BigInt(app.chainAppointmentId)
           : BigInt(app.chainAppointmentId);
-        confirm([chainId]);
+        confirmAppointment([chainId]); // ✅ use renamed function
         console.log("✅ Confirm transaction sent");
       } else if (status === "COMPLETED") {
         const chainId = typeof app.chainAppointmentId === 'string'
           ? BigInt(app.chainAppointmentId)
           : BigInt(app.chainAppointmentId);
-        complete([chainId]);
+        completeAppointment([chainId]); // ✅ use renamed function
         console.log("✅ Complete transaction sent");
       } else if (status === "CANCELLED") {
         console.log("📝 Cancelling (database only)");
