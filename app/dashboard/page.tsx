@@ -35,7 +35,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
 
-  // Rename to avoid shadowing window.confirm
   const { confirm: confirmAppointment, isPending: confirmPending } = useConfirmAppointment();
   const { complete: completeAppointment, isPending: completePending } = useCompleteAppointment();
 
@@ -126,7 +125,6 @@ export default function DashboardPage() {
   };
 
   const handleDeleteSlot = async (id: string) => {
-    // Use window.confirm to avoid shadowing
     if (!window.confirm("Delete this slot?")) return;
     const res = await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
     if (res.ok) {
@@ -161,8 +159,8 @@ export default function DashboardPage() {
       }
 
       if (status === "CONFIRMED" || status === "COMPLETED") {
-        console.log("⏳ Waiting for transaction...");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        console.log("⏳ Waiting for transaction to mine...");
+        await new Promise((resolve) => setTimeout(resolve, 15000));
         console.log("✅ Transaction should be mined");
       }
 
@@ -194,15 +192,12 @@ export default function DashboardPage() {
     }
   };
 
-  // 🗑️ Clear All Appointments for this doctor
   const handleClearAll = async () => {
     if (!window.confirm("Are you sure you want to delete ALL your appointments? This action cannot be undone.")) return;
     try {
-      // Delete each appointment one by one (or use a bulk endpoint)
       for (const app of appointments) {
         await fetch(`/api/appointments/${app.id}`, { method: "DELETE" });
       }
-      // Refresh the list
       if (doctorId) fetchData(doctorId);
       alert("All appointments cleared successfully.");
     } catch (error) {
@@ -240,7 +235,6 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Appointments Section */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Appointments</h2>
@@ -264,9 +258,9 @@ export default function DashboardPage() {
                   <p><strong>Description:</strong> {app.description}</p>
                   <p className="mt-1">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
-                        app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                          app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                            "bg-yellow-100 text-yellow-800"
+                      app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
+                        app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                          "bg-yellow-100 text-yellow-800"
                       }`}>
                       {app.status || "PENDING"}
                     </span>
@@ -306,7 +300,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Manage Slots Section */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Manage Slots</h2>

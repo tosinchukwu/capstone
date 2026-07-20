@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 
 type Appointment = {
-  id: string; // ✅ UUID (database primary key)
+  id: string;
   chainAppointmentId: string | number;
   patient: { name: string; wallet: string } | null;
   doctor: { name: string; wallet: string } | null;
@@ -68,7 +68,6 @@ export default function AppointmentCard({ appointment, onDelete }: { appointment
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          {/* ✅ Uses the UUID (appointment.id) */}
           <Link
             href={`/appointments/${appointment.id}`}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"

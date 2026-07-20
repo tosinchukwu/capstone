@@ -1,7 +1,7 @@
 import { useWriteContract, useReadContract } from "wagmi";
 import { contractConfig } from "@/lib/contract";
 
-// ----- WRITE HOOKS (No async, no await) -----
+// ----- WRITE HOOKS -----
 
 export function useCreateAppointment() {
   const { writeContract, isPending, error } = useWriteContract();

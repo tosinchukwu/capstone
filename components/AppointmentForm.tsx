@@ -48,7 +48,6 @@ export default function AppointmentForm() {
   const { create, isPending } = useCreateAppointment();
   const { switchChain } = useSwitchChain();
 
-  // Fetch doctors
   const fetchDoctors = () => {
     setLoadingDoctors(true);
     fetch("/api/doctors")
@@ -64,7 +63,6 @@ export default function AppointmentForm() {
     fetchDoctors();
   }, []);
 
-  // Auto‑select doctor if stored ID matches
   useEffect(() => {
     if (doctors.length > 0 && selectedDoctor) {
       const doctor = doctors.find((d) => d.id === selectedDoctor);
@@ -78,7 +76,6 @@ export default function AppointmentForm() {
     }
   }, [doctors, selectedDoctor]);
 
-  // Fetch slots when doctor is selected
   useEffect(() => {
     if (!selectedDoctorId) {
       setSlots([]);
@@ -110,7 +107,6 @@ export default function AppointmentForm() {
     setSelectedSlot(e.target.value);
   };
 
-  // Refresh doctors manually
   const refreshDoctors = () => {
     fetchDoctors();
   };

@@ -79,7 +79,6 @@ export default function AppointmentDetail({ id }: { id: number }) {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      {/* Back Button */}
       <Link
         href="/"
         className="inline-flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 mb-4 transition"
