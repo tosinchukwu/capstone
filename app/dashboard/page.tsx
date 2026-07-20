@@ -134,7 +134,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ CORRECTED – no await on confirm/complete, pass array
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       const app = appointments.find((a) => a.id === id);
@@ -235,9 +234,9 @@ export default function DashboardPage() {
                   <p><strong>Description:</strong> {app.description}</p>
                   <p className="mt-1">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
-                      app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                        app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                          "bg-yellow-100 text-yellow-800"
+                        app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
+                          app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                            "bg-yellow-100 text-yellow-800"
                       }`}>
                       {app.status || "PENDING"}
                     </span>
