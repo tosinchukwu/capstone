@@ -49,7 +49,8 @@ export default function AppointmentForm() {
   const { switchChain } = useSwitchChain();
 
   // Fetch doctors
-  useEffect(() => {
+  const fetchDoctors = () => {
+    setLoadingDoctors(true);
     fetch("/api/doctors")
       .then((res) => res.json())
       .then((data) => {
@@ -57,6 +58,10 @@ export default function AppointmentForm() {
         setLoadingDoctors(false);
       })
       .catch(() => setLoadingDoctors(false));
+  };
+
+  useEffect(() => {
+    fetchDoctors();
   }, []);
 
   // Auto‑select doctor if stored ID matches
@@ -67,7 +72,6 @@ export default function AppointmentForm() {
         setSelectedDoctorAddress(doctor.wallet);
         setSelectedDoctorId(doctor.id);
       } else {
-        // stored doctor no longer exists
         localStorage.removeItem("selectedDoctorId");
         setSelectedDoctor("");
       }
@@ -104,6 +108,11 @@ export default function AppointmentForm() {
 
   const handleSlotSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedSlot(e.target.value);
+  };
+
+  // Refresh doctors manually
+  const refreshDoctors = () => {
+    fetchDoctors();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -211,19 +220,29 @@ export default function AppointmentForm() {
 
       <div>
         <label className="block text-sm font-medium">Select Doctor</label>
-        <select
-          value={selectedDoctor}
-          onChange={handleDoctorSelect}
-          className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-          required
-        >
-          <option value="">Choose a doctor...</option>
-          {doctors.map((doctor) => (
-            <option key={doctor.id} value={doctor.id}>
-              {doctor.name} – {doctor.specialty} ({doctor.hospital})
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedDoctor}
+            onChange={handleDoctorSelect}
+            className="flex-1 p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+            required
+          >
+            <option value="">Choose a doctor...</option>
+            {doctors.map((doctor) => (
+              <option key={doctor.id} value={doctor.id}>
+                {doctor.name} – {doctor.specialty} ({doctor.hospital})
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={refreshDoctors}
+            className="text-sm text-blue-600 hover:text-blue-800 underline whitespace-nowrap"
+            disabled={loadingDoctors}
+          >
+            {loadingDoctors ? "..." : "⟳ Refresh"}
+          </button>
+        </div>
         {selectedDoctor && (
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             <p>Wallet: {selectedDoctorAddress.slice(0, 6)}...{selectedDoctorAddress.slice(-4)}</p>
