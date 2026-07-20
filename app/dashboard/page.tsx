@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
 
-  // ✅ Rename to avoid shadowing window.confirm
+  // Rename to avoid shadowing window.confirm
   const { confirm: confirmAppointment, isPending: confirmPending } = useConfirmAppointment();
   const { complete: completeAppointment, isPending: completePending } = useCompleteAppointment();
 
@@ -126,7 +126,7 @@ export default function DashboardPage() {
   };
 
   const handleDeleteSlot = async (id: string) => {
-    // ✅ Use window.confirm to avoid shadowing
+    // Use window.confirm to avoid shadowing
     if (!window.confirm("Delete this slot?")) return;
     const res = await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
     if (res.ok) {
@@ -148,13 +148,13 @@ export default function DashboardPage() {
         const chainId = typeof app.chainAppointmentId === 'string'
           ? BigInt(app.chainAppointmentId)
           : BigInt(app.chainAppointmentId);
-        confirmAppointment([chainId]); // ✅ use renamed function
+        confirmAppointment([chainId]);
         console.log("✅ Confirm transaction sent");
       } else if (status === "COMPLETED") {
         const chainId = typeof app.chainAppointmentId === 'string'
           ? BigInt(app.chainAppointmentId)
           : BigInt(app.chainAppointmentId);
-        completeAppointment([chainId]); // ✅ use renamed function
+        completeAppointment([chainId]);
         console.log("✅ Complete transaction sent");
       } else if (status === "CANCELLED") {
         console.log("📝 Cancelling (database only)");
@@ -194,6 +194,23 @@ export default function DashboardPage() {
     }
   };
 
+  // 🗑️ Clear All Appointments for this doctor
+  const handleClearAll = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL your appointments? This action cannot be undone.")) return;
+    try {
+      // Delete each appointment one by one (or use a bulk endpoint)
+      for (const app of appointments) {
+        await fetch(`/api/appointments/${app.id}`, { method: "DELETE" });
+      }
+      // Refresh the list
+      if (doctorId) fetchData(doctorId);
+      alert("All appointments cleared successfully.");
+    } catch (error) {
+      console.error("Error clearing appointments:", error);
+      alert("Failed to clear appointments. Please try again.");
+    }
+  };
+
   if (!isConnected) {
     return (
       <div className="max-w-6xl mx-auto p-4">
@@ -223,8 +240,19 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* Appointments Section */}
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold">Appointments</h2>
+          {appointments.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
         {appointments.length === 0 && <p className="text-gray-500">No appointments yet.</p>}
         <div className="grid gap-4">
           {appointments.map((app) => (
@@ -278,6 +306,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Manage Slots Section */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Manage Slots</h2>

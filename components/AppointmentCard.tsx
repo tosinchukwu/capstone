@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useAccount } from "wagmi";
 
 type Appointment = {
   id: string;
@@ -10,7 +11,9 @@ type Appointment = {
   description: string;
 };
 
-export default function AppointmentCard({ appointment }: { appointment: Appointment }) {
+export default function AppointmentCard({ appointment, onDelete }: { appointment: Appointment; onDelete?: (id: string) => void }) {
+  const { address } = useAccount();
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Not set";
     const d = new Date(dateStr);
@@ -21,6 +24,17 @@ export default function AppointmentCard({ appointment }: { appointment: Appointm
   const doctorAddress = appointment.doctor?.wallet
     ? `${appointment.doctor.wallet.slice(0, 6)}...${appointment.doctor.wallet.slice(-4)}`
     : "Unknown";
+
+  // Check if current user is the patient or the doctor
+  const isPatient = address === appointment.patient?.wallet;
+  const isDoctor = address === appointment.doctor?.wallet;
+  const canDelete = isPatient || isDoctor;
+
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete this appointment? This action cannot be undone.`)) {
+      if (onDelete) onDelete(appointment.id);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
@@ -54,12 +68,22 @@ export default function AppointmentCard({ appointment }: { appointment: Appointm
             </span>
           </p>
         </div>
-        <Link
-          href={`/appointments/${appointment.id}`}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          View Details →
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link
+            href={`/appointments/${appointment.id}`}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            View Details →
+          </Link>
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              className="text-red-600 hover:text-red-800 text-sm font-medium"
+            >
+              Delete
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

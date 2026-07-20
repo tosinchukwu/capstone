@@ -12,11 +12,12 @@ type Appointment = {
   description: string;
 };
 
-export default function AppointmentList() {
+export default function AppointmentList({ refresh }: { refresh?: number }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAppointments = () => {
+    setLoading(true);
     fetch("/api/appointments")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch appointments");
@@ -30,7 +31,23 @@ export default function AppointmentList() {
         console.error("Error fetching appointments:", err);
         setLoading(false);
       });
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [refresh]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete appointment");
+      // Refresh the list after deletion
+      fetchAppointments();
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      alert("Failed to delete appointment. Please try again.");
+    }
+  };
 
   if (loading) {
     return (
@@ -70,7 +87,7 @@ export default function AppointmentList() {
           </h3>
           <div className="grid gap-4">
             {apps.map((app) => (
-              <AppointmentCard key={app.id} appointment={app} />
+              <AppointmentCard key={app.id} appointment={app} onDelete={handleDelete} />
             ))}
           </div>
         </div>
