@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 
 type Appointment = {
-  id: string;
+  id: string; // ✅ UUID (database primary key)
   chainAppointmentId: string | number;
   patient: { name: string; wallet: string } | null;
   doctor: { name: string; wallet: string } | null;
@@ -25,7 +25,6 @@ export default function AppointmentCard({ appointment, onDelete }: { appointment
     ? `${appointment.doctor.wallet.slice(0, 6)}...${appointment.doctor.wallet.slice(-4)}`
     : "Unknown";
 
-  // Check if current user is the patient or the doctor
   const isPatient = address === appointment.patient?.wallet;
   const isDoctor = address === appointment.doctor?.wallet;
   const canDelete = isPatient || isDoctor;
@@ -69,6 +68,7 @@ export default function AppointmentCard({ appointment, onDelete }: { appointment
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
+          {/* ✅ Uses the UUID (appointment.id) */}
           <Link
             href={`/appointments/${appointment.id}`}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"

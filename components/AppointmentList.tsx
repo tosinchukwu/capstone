@@ -41,7 +41,6 @@ export default function AppointmentList({ refresh }: { refresh?: number }) {
     try {
       const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete appointment");
-      // Refresh the list after deletion
       fetchAppointments();
     } catch (error) {
       console.error("Error deleting appointment:", error);
@@ -70,7 +69,6 @@ export default function AppointmentList({ refresh }: { refresh?: number }) {
     );
   }
 
-  // Group appointments by date
   const grouped = appointments.reduce((acc, app) => {
     const date = app.date ? new Date(app.date).toLocaleDateString() : "Unknown";
     if (!acc[date]) acc[date] = [];
@@ -82,9 +80,7 @@ export default function AppointmentList({ refresh }: { refresh?: number }) {
     <div className="space-y-6">
       {Object.entries(grouped).map(([date, apps]) => (
         <div key={date}>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            {date}
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">{date}</h3>
           <div className="grid gap-4">
             {apps.map((app) => (
               <AppointmentCard key={app.id} appointment={app} onDelete={handleDelete} />
