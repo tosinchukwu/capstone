@@ -12,13 +12,24 @@ type Appointment = {
   description: string;
 };
 
-export default function AppointmentList({ refresh }: { refresh?: number }) {
+interface AppointmentListProps {
+  patientId?: string;
+  doctorId?: string;
+  refresh?: number;
+  onUpdate?: () => void;
+}
+
+export default function AppointmentList({ patientId, doctorId, refresh, onUpdate }: AppointmentListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAppointments = () => {
     setLoading(true);
-    fetch("/api/appointments")
+    const params = new URLSearchParams();
+    if (patientId) params.append("patientId", patientId);
+    if (doctorId) params.append("doctorId", doctorId);
+    const url = `/api/appointments?${params.toString()}`;
+    fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch appointments");
         return res.json();
@@ -35,13 +46,14 @@ export default function AppointmentList({ refresh }: { refresh?: number }) {
 
   useEffect(() => {
     fetchAppointments();
-  }, [refresh]);
+  }, [patientId, doctorId, refresh]);
 
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete appointment");
-      fetchAppointments();
+      fetchAppointments(); // refresh list
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error deleting appointment:", error);
       alert("Failed to delete appointment. Please try again.");
@@ -69,6 +81,7 @@ export default function AppointmentList({ refresh }: { refresh?: number }) {
     );
   }
 
+  // Group by date
   const grouped = appointments.reduce((acc, app) => {
     const date = app.date ? new Date(app.date).toLocaleDateString() : "Unknown";
     if (!acc[date]) acc[date] = [];

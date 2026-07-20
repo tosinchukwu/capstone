@@ -4,17 +4,8 @@ import { useAccount } from "wagmi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ConnectWallet from "@/components/ConnectWallet";
+import AppointmentList from "@/components/AppointmentList";
 import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
-
-type Appointment = {
-  id: string;
-  chainAppointmentId: string | number;
-  patient: { name: string; wallet: string } | null;
-  doctor: { name: string; wallet: string } | null;
-  date: string | null;
-  status: string;
-  description: string;
-};
 
 type Slot = {
   id: string;
@@ -27,13 +18,13 @@ type Slot = {
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [newSlotDate, setNewSlotDate] = useState("");
   const [newSlotStart, setNewSlotStart] = useState("");
   const [newSlotEnd, setNewSlotEnd] = useState("");
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { confirm: confirmAppointment, isPending: confirmPending } = useConfirmAppointment();
   const { complete: completeAppointment, isPending: completePending } = useCompleteAppointment();
@@ -49,7 +40,7 @@ export default function DashboardPage() {
       .then((data) => {
         if (data.id) {
           setDoctorId(data.id);
-          fetchData(data.id);
+          fetchSlots(data.id);
         } else {
           router.push("/register-doctor");
         }
@@ -59,24 +50,14 @@ export default function DashboardPage() {
       });
   }, [address, isConnected, router]);
 
-  const fetchData = async (id: string) => {
+  const fetchSlots = async (id: string) => {
     try {
-      const [appointmentsRes, slotsRes] = await Promise.all([
-        fetch(`/api/appointments?doctorId=${id}`),
-        fetch(`/api/availability?doctorId=${id}`),
-      ]);
-
-      if (!appointmentsRes.ok) throw new Error("Failed to fetch appointments");
-      if (!slotsRes.ok) throw new Error("Failed to fetch slots");
-
-      const appointmentsData = await appointmentsRes.json();
-      const slotsData = await slotsRes.json();
-
-      setAppointments(appointmentsData);
-      setSlots(slotsData);
+      const res = await fetch(`/api/availability?doctorId=${id}`);
+      if (!res.ok) throw new Error("Failed to fetch slots");
+      const data = await res.json();
+      setSlots(data);
     } catch (error) {
-      console.error("Error fetching data:", error);
-      setAppointments([]);
+      console.error("Error fetching slots:", error);
       setSlots([]);
     } finally {
       setLoading(false);
@@ -86,7 +67,7 @@ export default function DashboardPage() {
   const refreshSlots = async () => {
     if (doctorId) {
       setLoading(true);
-      await fetchData(doctorId);
+      await fetchSlots(doctorId);
       setLoading(false);
     }
   };
@@ -115,6 +96,8 @@ export default function DashboardPage() {
         setNewSlotStart("");
         setNewSlotEnd("");
         alert("Slot added successfully!");
+        // Refresh the appointment list as well (to show updated slots)
+        setRefreshKey((prev) => prev + 1);
       } else {
         alert("Failed to add slot: " + (data.error || "Unknown error"));
       }
@@ -134,76 +117,9 @@ export default function DashboardPage() {
     }
   };
 
-  const updateAppointmentStatus = async (id: string, status: string) => {
-    try {
-      const app = appointments.find((a) => a.id === id);
-      if (!app) {
-        alert("Appointment not found. Please refresh and try again.");
-        return;
-      }
-
-      if (status === "CONFIRMED") {
-        const chainId = typeof app.chainAppointmentId === 'string'
-          ? BigInt(app.chainAppointmentId)
-          : BigInt(app.chainAppointmentId);
-        confirmAppointment([chainId]);
-        console.log("✅ Confirm transaction sent");
-      } else if (status === "COMPLETED") {
-        const chainId = typeof app.chainAppointmentId === 'string'
-          ? BigInt(app.chainAppointmentId)
-          : BigInt(app.chainAppointmentId);
-        completeAppointment([chainId]);
-        console.log("✅ Complete transaction sent");
-      } else if (status === "CANCELLED") {
-        console.log("📝 Cancelling (database only)");
-      }
-
-      if (status === "CONFIRMED" || status === "COMPLETED") {
-        console.log("⏳ Waiting for transaction to mine...");
-        await new Promise((resolve) => setTimeout(resolve, 15000));
-        console.log("✅ Transaction should be mined");
-      }
-
-      const res = await fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
-      }
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update status");
-      }
-
-      console.log(`✅ Appointment ${id} → ${status}`);
-
-      if (doctorId) {
-        await fetchData(doctorId);
-      }
-    } catch (error) {
-      console.error("❌ Error:", error);
-      alert("Failed to update appointment: " + (error as Error).message);
-    }
-  };
-
-  const handleClearAll = async () => {
-    if (!window.confirm("Are you sure you want to delete ALL your appointments? This action cannot be undone.")) return;
-    try {
-      for (const app of appointments) {
-        await fetch(`/api/appointments/${app.id}`, { method: "DELETE" });
-      }
-      if (doctorId) fetchData(doctorId);
-      alert("All appointments cleared successfully.");
-    } catch (error) {
-      console.error("Error clearing appointments:", error);
-      alert("Failed to clear appointments. Please try again.");
-    }
+  // Trigger refresh of AppointmentList when doctorId changes
+  const handleRefreshAppointments = () => {
+    setRefreshKey((prev) => prev + 1);
   };
 
   if (!isConnected) {
@@ -233,73 +149,25 @@ export default function DashboardPage() {
         <Link href="/dashboard/profile" className="text-blue-600 hover:underline">
           Edit Profile →
         </Link>
+        <button
+          onClick={handleRefreshAppointments}
+          className="ml-4 text-sm text-blue-600 hover:underline"
+        >
+          Refresh Appointments
+        </button>
       </div>
 
+      {/* Appointments Section – using shared AppointmentList */}
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Appointments</h2>
-          {appointments.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-            >
-              Clear All
-            </button>
-          )}
-        </div>
-        {appointments.length === 0 && <p className="text-gray-500">No appointments yet.</p>}
-        <div className="grid gap-4">
-          {appointments.map((app) => (
-            <div key={app.id} className="card card-hover">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p><strong>Patient:</strong> {app.patient?.name || "Unknown"}</p>
-                  <p><strong>Date:</strong> {app.date ? new Date(app.date).toLocaleString() : "Not set"}</p>
-                  <p><strong>Description:</strong> {app.description}</p>
-                  <p className="mt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
-                      app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                        app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                          "bg-yellow-100 text-yellow-800"
-                      }`}>
-                      {app.status || "PENDING"}
-                    </span>
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {app.status === "PENDING" && (
-                    <>
-                      <button
-                        onClick={() => updateAppointmentStatus(app.id, "CONFIRMED")}
-                        className="btn-primary text-sm px-3 py-1"
-                        disabled={confirmPending}
-                      >
-                        {confirmPending ? "Confirming..." : "Confirm"}
-                      </button>
-                      <button
-                        onClick={() => updateAppointmentStatus(app.id, "CANCELLED")}
-                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-                  {app.status === "CONFIRMED" && (
-                    <button
-                      onClick={() => updateAppointmentStatus(app.id, "COMPLETED")}
-                      className="btn-accent text-sm px-3 py-1"
-                      disabled={completePending}
-                    >
-                      {completePending ? "Completing..." : "Complete"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
+        <AppointmentList
+          doctorId={doctorId}
+          refresh={refreshKey}
+          onUpdate={handleRefreshAppointments}
+        />
       </div>
 
+      {/* Manage Slots Section */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Manage Slots</h2>
