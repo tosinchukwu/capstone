@@ -2,6 +2,7 @@ import Link from "next/link";
 
 type Appointment = {
   id: string;
+  chainAppointmentId: string | number;
   patient: { name: string; wallet: string } | null;
   doctor: { name: string; wallet: string } | null;
   date: string | null;
@@ -10,7 +11,6 @@ type Appointment = {
 };
 
 export default function AppointmentCard({ appointment }: { appointment: Appointment }) {
-  // Safe date formatter
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Not set";
     const d = new Date(dateStr);
@@ -42,12 +42,12 @@ export default function AppointmentCard({ appointment }: { appointment: Appointm
             <span className="font-medium">Status:</span>{" "}
             <span
               className={`px-2 py-1 rounded-full text-xs font-medium ${appointment.status === "CONFIRMED"
-                ? "bg-green-100 text-green-800"
-                : appointment.status === "COMPLETED"
-                  ? "bg-blue-100 text-blue-800"
-                  : appointment.status === "CANCELLED"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-yellow-100 text-yellow-800"
+                  ? "bg-green-100 text-green-800"
+                  : appointment.status === "COMPLETED"
+                    ? "bg-blue-100 text-blue-800"
+                    : appointment.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
                 }`}
             >
               {appointment.status || "PENDING"}

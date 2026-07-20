@@ -4,15 +4,16 @@ import { useAccount } from "wagmi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ConnectWallet from "@/components/ConnectWallet";
+import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
 
 type Appointment = {
   id: string;
-  patientName: string;
-  date: string;
+  chainAppointmentId: string | number;
+  patient: { name: string; wallet: string } | null;
+  doctor: { name: string; wallet: string } | null;
+  date: string | null;
   status: string;
   description: string;
-  patient: { name: string; wallet: string };
-  doctor: { name: string };
 };
 
 type Slot = {
@@ -33,6 +34,9 @@ export default function DashboardPage() {
   const [newSlotEnd, setNewSlotEnd] = useState("");
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
+
+  const { confirm, isPending: confirmPending } = useConfirmAppointment();
+  const { complete, isPending: completePending } = useCompleteAppointment();
 
   useEffect(() => {
     if (!isConnected || !address) return;
@@ -130,25 +134,61 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ CORRECTED – no await on confirm/complete, pass array
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
+      const app = appointments.find((a) => a.id === id);
+      if (!app) {
+        alert("Appointment not found. Please refresh and try again.");
+        return;
+      }
+
+      if (status === "CONFIRMED") {
+        const chainId = typeof app.chainAppointmentId === 'string'
+          ? BigInt(app.chainAppointmentId)
+          : BigInt(app.chainAppointmentId);
+        confirm([chainId]);
+        console.log("✅ Confirm transaction sent");
+      } else if (status === "COMPLETED") {
+        const chainId = typeof app.chainAppointmentId === 'string'
+          ? BigInt(app.chainAppointmentId)
+          : BigInt(app.chainAppointmentId);
+        complete([chainId]);
+        console.log("✅ Complete transaction sent");
+      } else if (status === "CANCELLED") {
+        console.log("📝 Cancelling (database only)");
+      }
+
+      if (status === "CONFIRMED" || status === "COMPLETED") {
+        console.log("⏳ Waiting for transaction...");
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        console.log("✅ Transaction should be mined");
+      }
+
       const res = await fetch(`/api/appointments/${id}`, {
         method: "PUT",
         body: JSON.stringify({ status }),
         headers: { "Content-Type": "application/json" },
       });
+
       let data;
       try {
         data = await res.json();
-      } catch (parseError) {
+      } catch {
         throw new Error(`Server returned ${res.status}: ${res.statusText}`);
       }
+
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update appointment");
+        throw new Error(data.error || "Failed to update status");
       }
-      if (doctorId) fetchData(doctorId);
+
+      console.log(`✅ Appointment ${id} → ${status}`);
+
+      if (doctorId) {
+        await fetchData(doctorId);
+      }
     } catch (error) {
-      console.error("Error updating appointment:", error);
+      console.error("❌ Error:", error);
       alert("Failed to update appointment: " + (error as Error).message);
     }
   };
@@ -191,13 +231,13 @@ export default function DashboardPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <p><strong>Patient:</strong> {app.patient?.name || "Unknown"}</p>
-                  <p><strong>Date:</strong> {new Date(app.date).toLocaleString()}</p>
+                  <p><strong>Date:</strong> {app.date ? new Date(app.date).toLocaleString() : "Not set"}</p>
                   <p><strong>Description:</strong> {app.description}</p>
                   <p className="mt-1">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === "CONFIRMED" ? "bg-green-100 text-green-800" :
-                        app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                          app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                            "bg-yellow-100 text-yellow-800"
+                      app.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
+                        app.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                          "bg-yellow-100 text-yellow-800"
                       }`}>
                       {app.status || "PENDING"}
                     </span>
@@ -209,8 +249,9 @@ export default function DashboardPage() {
                       <button
                         onClick={() => updateAppointmentStatus(app.id, "CONFIRMED")}
                         className="btn-primary text-sm px-3 py-1"
+                        disabled={confirmPending}
                       >
-                        Confirm
+                        {confirmPending ? "Confirming..." : "Confirm"}
                       </button>
                       <button
                         onClick={() => updateAppointmentStatus(app.id, "CANCELLED")}
@@ -224,8 +265,9 @@ export default function DashboardPage() {
                     <button
                       onClick={() => updateAppointmentStatus(app.id, "COMPLETED")}
                       className="btn-accent text-sm px-3 py-1"
+                      disabled={completePending}
                     >
-                      Complete
+                      {completePending ? "Completing..." : "Complete"}
                     </button>
                   )}
                 </div>
@@ -238,10 +280,7 @@ export default function DashboardPage() {
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Manage Slots</h2>
-          <button
-            onClick={refreshSlots}
-            className="btn-secondary text-sm px-3 py-1"
-          >
+          <button onClick={refreshSlots} className="btn-secondary text-sm px-3 py-1">
             Refresh Slots
           </button>
         </div>
@@ -275,7 +314,7 @@ export default function DashboardPage() {
           {slots.map((slot) => (
             <div key={slot.id} className="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 rounded">
               <span>
-                {new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime}
+                {slot.date ? new Date(slot.date).toLocaleDateString() : "No date"} {slot.startTime} - {slot.endTime}
                 {slot.isBooked && " (Booked)"}
               </span>
               {!slot.isBooked && (

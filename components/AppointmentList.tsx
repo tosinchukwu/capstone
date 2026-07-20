@@ -4,6 +4,7 @@ import AppointmentCard from "./AppointmentCard";
 
 type Appointment = {
   id: string;
+  chainAppointmentId: string | number;
   patient: { name: string; wallet: string } | null;
   doctor: { name: string; wallet: string } | null;
   date: string | null;
@@ -52,10 +53,27 @@ export default function AppointmentList() {
     );
   }
 
+  // Group appointments by date
+  const grouped = appointments.reduce((acc, app) => {
+    const date = app.date ? new Date(app.date).toLocaleDateString() : "Unknown";
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(app);
+    return acc;
+  }, {} as Record<string, Appointment[]>);
+
   return (
-    <div className="grid gap-4">
-      {appointments.map((app) => (
-        <AppointmentCard key={app.id} appointment={app} />
+    <div className="space-y-6">
+      {Object.entries(grouped).map(([date, apps]) => (
+        <div key={date}>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            {date}
+          </h3>
+          <div className="grid gap-4">
+            {apps.map((app) => (
+              <AppointmentCard key={app.id} appointment={app} />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );

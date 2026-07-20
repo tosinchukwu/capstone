@@ -22,7 +22,11 @@ export async function GET(
   try {
     const appointment = await prisma.appointment.findUnique({
       where: { id: params.id },
-      include: { patient: true, doctor: true, availability: true },
+      include: {
+        patient: true,
+        doctor: true,
+        availability: true,
+      },
     });
     if (!appointment) {
       return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
@@ -46,13 +50,9 @@ export async function PUT(
     const body = await request.json();
     const { status, date, description } = body;
 
-    // Validate
     const validStatuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
     if (status && !validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
     const data: any = {};
@@ -60,7 +60,6 @@ export async function PUT(
     if (date) data.date = new Date(date);
     if (description) data.description = description;
 
-    // Update appointment
     const updated = await prisma.appointment.update({
       where: { id: params.id },
       data,
@@ -72,7 +71,7 @@ export async function PUT(
   } catch (error) {
     console.error("PUT appointment error:", error);
     return NextResponse.json(
-      { error: "Failed to update appointment: " + (error as Error).message },
+      { error: "Failed to update appointment" },
       { status: 500 }
     );
   }

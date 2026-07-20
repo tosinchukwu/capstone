@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Helper to convert BigInt to string in an object
 function serializeBigInt(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'bigint') return obj.toString();
@@ -27,45 +26,56 @@ export async function GET(request: Request) {
   if (doctorId) where.doctorId = doctorId;
   if (status) where.status = status;
 
-  const appointments = await prisma.appointment.findMany({
-    where,
-    include: {
-      patient: true,
-      doctor: true,
-      availability: true,
-    },
-    orderBy: { date: "asc" },
-  });
-
-  // Convert BigInt to string for JSON response
-  const serialized = serializeBigInt(appointments);
-  return NextResponse.json(serialized);
+  try {
+    const appointments = await prisma.appointment.findMany({
+      where,
+      include: {
+        patient: true,
+        doctor: true,
+        availability: true,
+      },
+      orderBy: { date: "asc" },
+    });
+    const serialized = serializeBigInt(appointments);
+    return NextResponse.json(serialized);
+  } catch (error) {
+    console.error("GET /api/appointments error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch appointments" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log("📨 Received POST body:", body);
+    const {
+      chainAppointmentId,
+      patientWallet,
+      patientName,
+      doctorId,
+      date,
+      description,
+      status,
+      availabilityId,
+    } = body;
 
-    const { chainAppointmentId, patientWallet, patientName, doctorId, date, description, status, availabilityId } = body;
-
-    // Validate fields
     const missingFields: string[] = [];
-    if (chainAppointmentId === undefined || chainAppointmentId === null) missingFields.push("chainAppointmentId");
+    if (chainAppointmentId === undefined || chainAppointmentId === null)
+      missingFields.push("chainAppointmentId");
     if (!patientWallet) missingFields.push("patientWallet");
     if (!doctorId) missingFields.push("doctorId");
     if (!date) missingFields.push("date");
     if (!description) missingFields.push("description");
 
     if (missingFields.length > 0) {
-      console.error("❌ Missing fields:", missingFields);
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(", ")}` },
         { status: 400 }
       );
     }
 
-    // Find or create patient
     let patient = await prisma.user.findUnique({
       where: { wallet: patientWallet },
     });
@@ -86,17 +96,15 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check doctor
     const doctor = await prisma.user.findUnique({
       where: { id: doctorId },
     });
     if (!doctor || doctor.role !== "DOCTOR") {
-      return NextResponse.json({ error: "Doctor not found or not a doctor" }, { status: 404 });
+      return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
     }
 
     let finalStatus = status || (doctor.autoConfirm ? "CONFIRMED" : "PENDING");
 
-    // Mark slot as booked if provided
     if (availabilityId) {
       const slot = await prisma.availability.findUnique({
         where: { id: availabilityId },
@@ -113,7 +121,6 @@ export async function POST(request: Request) {
       });
     }
 
-    // Create appointment
     const appointment = await prisma.appointment.create({
       data: {
         chainAppointmentId: BigInt(chainAppointmentId),
@@ -131,11 +138,10 @@ export async function POST(request: Request) {
       },
     });
 
-    // Serialize BigInt to string before sending response
     const serialized = serializeBigInt(appointment);
     return NextResponse.json(serialized, { status: 201 });
   } catch (error) {
-    console.error("❌ POST /api/appointments error:", error);
+    console.error("POST /api/appointments error:", error);
     return NextResponse.json(
       { error: "Failed to create appointment: " + (error as Error).message },
       { status: 500 }
