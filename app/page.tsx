@@ -28,7 +28,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-card p-8 text-center">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            🏥 Health Consultation Booking Appointment
+            🏥 Health Consultation
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
             Are you a patient or a doctor?
@@ -157,6 +157,13 @@ export default function Home() {
           <HealthTips />
         </div>
       </main>
+
+      {/* Admin Link at Bottom */}
+      <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4 mt-8">
+        <Link href="/admin" className="hover:text-gold-500 transition-colors">
+          Admin Panel
+        </Link>
+      </footer>
     </div>
   );
 }
