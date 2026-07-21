@@ -96,7 +96,6 @@ export default function DashboardPage() {
         setNewSlotStart("");
         setNewSlotEnd("");
         alert("Slot added successfully!");
-        // Refresh the appointment list as well (to show updated slots)
         setRefreshKey((prev) => prev + 1);
       } else {
         alert("Failed to add slot: " + (data.error || "Unknown error"));
@@ -117,7 +116,50 @@ export default function DashboardPage() {
     }
   };
 
-  // Trigger refresh of AppointmentList when doctorId changes
+  // Status update handler – passes to AppointmentList
+  const updateAppointmentStatus = async (id: string, status: string) => {
+    try {
+      // We need the full appointment data to get chainAppointmentId
+      // Fetch it from the API to get the chainAppointmentId
+      const res = await fetch(`/api/appointments/${id}`);
+      if (!res.ok) throw new Error("Appointment not found");
+      const app = await res.json();
+
+      if (status === "CONFIRMED") {
+        const chainId = BigInt(app.chainAppointmentId);
+        confirmAppointment([chainId]);
+        console.log("✅ Confirm transaction sent");
+      } else if (status === "COMPLETED") {
+        const chainId = BigInt(app.chainAppointmentId);
+        completeAppointment([chainId]);
+        console.log("✅ Complete transaction sent");
+      } else if (status === "CANCELLED") {
+        console.log("📝 Rejecting (database only)");
+      }
+
+      if (status === "CONFIRMED" || status === "COMPLETED") {
+        console.log("⏳ Waiting for transaction...");
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+        console.log("✅ Transaction should be mined");
+      }
+
+      // Update the database
+      const updateRes = await fetch(`/api/appointments/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!updateRes.ok) throw new Error("Failed to update status in database");
+
+      // Refresh the list
+      setRefreshKey((prev) => prev + 1);
+      alert(`Appointment ${status.toLowerCase()} successfully!`);
+    } catch (error) {
+      console.error("❌ Error updating appointment:", error);
+      alert("Failed to update appointment: " + (error as Error).message);
+    }
+  };
+
   const handleRefreshAppointments = () => {
     setRefreshKey((prev) => prev + 1);
   };
@@ -157,13 +199,15 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Appointments Section – using shared AppointmentList */}
+      {/* ✅ Appointments Section – now with status update and pending state */}
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
           onUpdate={handleRefreshAppointments}
+          onStatusUpdate={updateAppointmentStatus}
+          isPending={confirmPending || completePending}
         />
       </div>
 

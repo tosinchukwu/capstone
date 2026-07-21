@@ -17,9 +17,18 @@ interface AppointmentListProps {
   doctorId?: string;
   refresh?: number;
   onUpdate?: () => void;
+  onStatusUpdate?: (id: string, status: string) => void;
+  isPending?: boolean;
 }
 
-export default function AppointmentList({ patientId, doctorId, refresh, onUpdate }: AppointmentListProps) {
+export default function AppointmentList({
+  patientId,
+  doctorId,
+  refresh,
+  onUpdate,
+  onStatusUpdate,
+  isPending
+}: AppointmentListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,11 +61,17 @@ export default function AppointmentList({ patientId, doctorId, refresh, onUpdate
     try {
       const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete appointment");
-      fetchAppointments(); // refresh list
+      fetchAppointments();
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error deleting appointment:", error);
       alert("Failed to delete appointment. Please try again.");
+    }
+  };
+
+  const handleStatusUpdate = (id: string, status: string) => {
+    if (onStatusUpdate) {
+      onStatusUpdate(id, status);
     }
   };
 
@@ -96,7 +111,13 @@ export default function AppointmentList({ patientId, doctorId, refresh, onUpdate
           <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">{date}</h3>
           <div className="grid gap-4">
             {apps.map((app) => (
-              <AppointmentCard key={app.id} appointment={app} onDelete={handleDelete} />
+              <AppointmentCard
+                key={app.id}
+                appointment={app}
+                onDelete={handleDelete}
+                onStatusUpdate={handleStatusUpdate}
+                isPending={isPending}
+              />
             ))}
           </div>
         </div>

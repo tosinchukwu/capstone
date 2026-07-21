@@ -11,7 +11,19 @@ type Appointment = {
   description: string;
 };
 
-export default function AppointmentCard({ appointment, onDelete }: { appointment: Appointment; onDelete?: (id: string) => void }) {
+interface AppointmentCardProps {
+  appointment: Appointment;
+  onDelete?: (id: string) => void;
+  onStatusUpdate?: (id: string, status: string) => void;
+  isPending?: boolean; // for disabling buttons during transaction
+}
+
+export default function AppointmentCard({ 
+  appointment, 
+  onDelete, 
+  onStatusUpdate,
+  isPending 
+}: AppointmentCardProps) {
   const { address } = useAccount();
 
   const formatDate = (dateStr: string | null) => {
@@ -25,12 +37,32 @@ export default function AppointmentCard({ appointment, onDelete }: { appointment
     ? `${appointment.doctor.wallet.slice(0, 6)}...${appointment.doctor.wallet.slice(-4)}`
     : "Unknown";
 
-  const isPatient = address === appointment.patient?.wallet;
+  // Determine if current user is the doctor
   const isDoctor = address === appointment.doctor?.wallet;
+  const isPatient = address === appointment.patient?.wallet;
   const canDelete = isPatient || isDoctor;
 
+  // Status-based button logic
+  const canConfirm = isDoctor && appointment.status === "PENDING";
+  const canComplete = isDoctor && appointment.status === "CONFIRMED";
+  const canReject = isDoctor && appointment.status === "PENDING";
+
+  const handleConfirm = () => {
+    if (onStatusUpdate) onStatusUpdate(appointment.id, "CONFIRMED");
+  };
+
+  const handleComplete = () => {
+    if (onStatusUpdate) onStatusUpdate(appointment.id, "COMPLETED");
+  };
+
+  const handleReject = () => {
+    if (window.confirm("Reject this appointment?")) {
+      if (onStatusUpdate) onStatusUpdate(appointment.id, "CANCELLED");
+    }
+  };
+
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete this appointment? This action cannot be undone.`)) {
+    if (window.confirm("Are you sure you want to delete this appointment? This action cannot be undone.")) {
       if (onDelete) onDelete(appointment.id);
     }
   };
@@ -54,14 +86,15 @@ export default function AppointmentCard({ appointment, onDelete }: { appointment
           <p className="text-sm text-gray-600 mt-1">
             <span className="font-medium">Status:</span>{" "}
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${appointment.status === "CONFIRMED"
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                appointment.status === "CONFIRMED"
                   ? "bg-green-100 text-green-800"
                   : appointment.status === "COMPLETED"
-                    ? "bg-blue-100 text-blue-800"
-                    : appointment.status === "CANCELLED"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-yellow-100 text-yellow-800"
-                }`}
+                  ? "bg-blue-100 text-blue-800"
+                  : appointment.status === "CANCELLED"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}
             >
               {appointment.status || "PENDING"}
             </span>
@@ -74,6 +107,35 @@ export default function AppointmentCard({ appointment, onDelete }: { appointment
           >
             View Details →
           </Link>
+          {/* Doctor action buttons */}
+          {canConfirm && (
+            <button
+              onClick={handleConfirm}
+              className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 disabled:opacity-50"
+              disabled={isPending}
+            >
+              {isPending ? "Confirming..." : "Confirm"}
+            </button>
+          )}
+          {canReject && (
+            <button
+              onClick={handleReject}
+              className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 disabled:opacity-50"
+              disabled={isPending}
+            >
+              Reject
+            </button>
+          )}
+          {canComplete && (
+            <button
+              onClick={handleComplete}
+              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+              disabled={isPending}
+            >
+              {isPending ? "Completing..." : "Complete"}
+            </button>
+          )}
+          {/* Delete button */}
           {canDelete && (
             <button
               onClick={handleDelete}
