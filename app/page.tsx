@@ -6,7 +6,8 @@ import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import ThemeToggle from "@/components/ThemeToggle";
 import Link from "next/link";
-import HospitalInfo from "@/components/HospitalInfo"; // ✅ new import
+import Logo from "@/components/Logo";
+import HospitalInfo from "@/components/HospitalInfo";
 
 export default function Home() {
   const { isConnected, address } = useAccount();
@@ -58,9 +59,8 @@ export default function Home() {
     <div className="min-h-screen">
       <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400 truncate max-w-[180px] sm:max-w-[300px] md:max-w-none">
-            🏥 Health Consultation Booking
-          </h1>
+          {/* Logo */}
+          <Logo />
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {isConnected && (
               <>
@@ -93,7 +93,7 @@ export default function Home() {
         {!isConnected ? (
           <div className="text-center py-12 sm:py-20">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-200 mb-4">
-              Welcome to Health Consultation Booking
+              Welcome to MEDCRUSH Blockchain Hospital
             </h2>
             <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-6 sm:mb-8">
               Connect your wallet to continue
@@ -154,7 +154,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* ✅ Updated Footer – Admin Link + Hospital Info */}
       <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4 mt-8">
         <div className="flex flex-col items-center gap-2">
           <Link href="/admin" className="hover:text-gold-500 transition-colors">
