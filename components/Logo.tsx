@@ -2,13 +2,14 @@ import Image from "next/image";
 
 export default function Logo() {
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
             <Image
-                src="/logo.svg"
+                src="/logo.png"
                 alt="MEDCRUSH Logo"
-                width={40}
-                height={40}
-                className="object-contain"
+                width={200}
+                height={180}
+                className="object-contain w-32 sm:w-40 md:w-48 lg:w-52"
+                priority
             />
             <div className="flex flex-col leading-tight">
                 <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
