@@ -15,3 +15,8 @@ docs/
 
 lib/
 /.github/workflows/
+
+broadcast/
+cache/
+out/
+lib/
