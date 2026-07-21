@@ -39,7 +39,9 @@ export default function AppointmentCard({
 
   const isDoctor = address === appointment.doctor?.wallet;
   const isPatient = address === appointment.patient?.wallet;
-  const canDelete = isPatient || isDoctor;
+
+  // ✅ Delete only allowed for doctors (not patients)
+  const canDelete = isDoctor;
 
   const canConfirm = isDoctor && appointment.status === "PENDING";
   const canComplete = isDoctor && appointment.status === "CONFIRMED";

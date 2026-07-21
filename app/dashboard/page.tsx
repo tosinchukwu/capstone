@@ -116,37 +116,46 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ Status update handler – calls contract then updates DB
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
+      // 1. Fetch appointment to get chainAppointmentId
       const res = await fetch(`/api/appointments/${id}`);
       if (!res.ok) throw new Error("Appointment not found");
       const app = await res.json();
 
+      // 2. Call contract if confirming or completing
       if (status === "CONFIRMED") {
         const chainId = BigInt(app.chainAppointmentId);
         confirmAppointment([chainId]);
-        console.log("✅ Confirm transaction sent");
+        console.log("✅ Confirm transaction sent for ID:", chainId.toString());
       } else if (status === "COMPLETED") {
         const chainId = BigInt(app.chainAppointmentId);
         completeAppointment([chainId]);
-        console.log("✅ Complete transaction sent");
+        console.log("✅ Complete transaction sent for ID:", chainId.toString());
       } else if (status === "CANCELLED") {
         console.log("📝 Rejecting (database only)");
       }
 
+      // 3. Wait 15 seconds for mining (if contract called)
       if (status === "CONFIRMED" || status === "COMPLETED") {
-        console.log("⏳ Waiting for transaction...");
+        console.log("⏳ Waiting for transaction to mine...");
         await new Promise((resolve) => setTimeout(resolve, 15000));
         console.log("✅ Transaction should be mined");
       }
 
+      // 4. Update database
       const updateRes = await fetch(`/api/appointments/${id}`, {
         method: "PUT",
         body: JSON.stringify({ status }),
         headers: { "Content-Type": "application/json" },
       });
-      if (!updateRes.ok) throw new Error("Failed to update status in database");
+      if (!updateRes.ok) {
+        const errData = await updateRes.json();
+        throw new Error(errData.error || "Failed to update status in database");
+      }
 
+      // 5. Refresh list
       setRefreshKey((prev) => prev + 1);
       alert(`Appointment ${status.toLowerCase()} successfully!`);
     } catch (error) {
