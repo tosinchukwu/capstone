@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAdminWallet } from "@/lib/admin";
 
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0xYourAdminWalletAddress";
-
-// ✅ GET – public (no auth required) – for displaying hospital info on the homepage
 export async function GET() {
   try {
     let settings = await prisma.hospitalSettings.findFirst();
     if (!settings) {
-      // Create default settings if none exist
+      // Create default settings with the environment admin wallet as initial whitelist
+      const initialAdmin = process.env.NEXT_PUBLIC_ADMIN_WALLET || "";
       settings = await prisma.hospitalSettings.create({
         data: {
           name: "MEDCRUSH BLOCKCHAIN HOSPITAL",
           email: "medcrush@gmail.com",
           phone: "08023000000",
           address: "2, Hospital Road, Benin",
-          website: "",
+          adminWallets: initialAdmin ? [initialAdmin] : [],
         },
       });
     }
@@ -29,34 +28,35 @@ export async function GET() {
   }
 }
 
-// ✅ PUT – requires admin wallet
 export async function PUT(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const wallet = searchParams.get("wallet");
-    if (wallet !== ADMIN_WALLET) {
+    if (!wallet || !(await isAdminWallet(wallet))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { id, ...data } = body;
+    const { id, adminWallets, ...data } = body;
 
     let settings = await prisma.hospitalSettings.findFirst();
     if (!settings) {
       settings = await prisma.hospitalSettings.create({
         data: {
           name: "MEDCRUSH BLOCKCHAIN HOSPITAL",
-          email: "medcrush@gmail.com",
-          phone: "08023000000",
-          address: "2, Hospital Road, Benin",
-          website: "",
+          adminWallets: [],
         },
       });
     }
 
+    const updateData = {
+      ...data,
+      adminWallets: Array.isArray(adminWallets) ? adminWallets : [],
+    };
+
     const updated = await prisma.hospitalSettings.update({
       where: { id: settings.id },
-      data,
+      data: updateData,
     });
     return NextResponse.json(updated);
   } catch (error) {

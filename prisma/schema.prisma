@@ -99,6 +99,7 @@ model HospitalSettings {
   linkedin    String?
   facebook    String?
   instagram   String?
+  adminWallets String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

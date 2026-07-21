@@ -2,14 +2,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function AdminLayout({ children, wallet }: { children: React.ReactNode; wallet: string }) {
+export default function AdminLayout({ children, wallet }: { children: React.ReactNode; wallet?: string }) {
     const pathname = usePathname();
 
     const navItems = [
         { name: "Dashboard", href: "/admin" },
         { name: "Doctors", href: "/admin/doctors" },
         { name: "Settings", href: "/admin/settings" },
-        { name: "🏠 Home", href: "/" }, // ✅ Home button added
+        { name: "🏠 Home", href: "/" },
     ];
 
     return (
@@ -17,7 +17,9 @@ export default function AdminLayout({ children, wallet }: { children: React.Reac
             <aside className="w-64 bg-slate-800/60 backdrop-blur-sm border-r border-gold-500/20 p-6 space-y-8 shadow-2xl min-h-screen sticky top-0">
                 <div className="text-center border-b border-gold-500/20 pb-4">
                     <h1 className="text-2xl font-serif font-bold text-gold-400 tracking-wide">Admin</h1>
-                    <p className="text-xs text-gray-400 mt-1 truncate">{wallet.slice(0, 10)}...</p>
+                    <p className="text-xs text-gray-400 mt-1 truncate">
+                        {wallet ? `${wallet.slice(0, 10)}...` : "No wallet"}
+                    </p>
                 </div>
                 <nav className="space-y-2">
                     {navItems.map((item) => (

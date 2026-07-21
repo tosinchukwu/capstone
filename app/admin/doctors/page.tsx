@@ -2,19 +2,41 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import AdminLayout from "@/components/AdminLayout";
-
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0xYourAdminWalletAddress";
+import { isAdminWallet } from "@/lib/admin";
 
 export default function AdminDoctors() {
     const { address, isConnected } = useAccount();
     const [doctors, setDoctors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<any>(null);
-    const [form, setForm] = useState({ name: "", email: "", wallet: "", specialty: "", hospital: "", location: "", bio: "", yearsExperience: "", rating: "", isActive: true });
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        wallet: "",
+        specialty: "",
+        hospital: "",
+        location: "",
+        bio: "",
+        yearsExperience: "",
+        rating: "",
+        isActive: true,
+    });
 
     useEffect(() => {
-        if (!isConnected || address !== ADMIN_WALLET) return;
-        fetchDoctors();
+        if (!isConnected || !address) {
+            setLoading(false);
+            return;
+        }
+        (async () => {
+            const admin = await isAdminWallet(address);
+            setIsAdmin(admin);
+            if (!admin) {
+                setLoading(false);
+                return;
+            }
+            await fetchDoctors();
+        })();
     }, [address, isConnected]);
 
     const fetchDoctors = async () => {
@@ -41,19 +63,38 @@ export default function AdminDoctors() {
             headers: { "Content-Type": "application/json" },
         });
         setEditing(null);
-        setForm({ name: "", email: "", wallet: "", specialty: "", hospital: "", location: "", bio: "", yearsExperience: "", rating: "", isActive: true });
+        setForm({
+            name: "",
+            email: "",
+            wallet: "",
+            specialty: "",
+            hospital: "",
+            location: "",
+            bio: "",
+            yearsExperience: "",
+            rating: "",
+            isActive: true,
+        });
         fetchDoctors();
     };
 
-    if (!isConnected) return <div className="p-8">Please connect your wallet.</div>;
-    if (address !== ADMIN_WALLET) return <div className="p-8 text-red-500">Unauthorized.</div>;
-    if (loading) return <div className="p-8">Loading...</div>;
+    if (!isConnected) {
+        return <div className="p-8 text-center">Please connect your wallet.</div>;
+    }
+    if (!address) {
+        return <div className="p-8 text-center">No wallet address detected.</div>;
+    }
+    if (!isAdmin) {
+        return <div className="p-8 text-red-500 text-center">Unauthorized – you are not an admin.</div>;
+    }
+    if (loading) {
+        return <div className="p-8 text-center">Loading doctors...</div>;
+    }
 
     return (
         <AdminLayout wallet={address}>
             <h2 className="text-3xl font-serif text-gold-300 mb-6">Manage Doctors</h2>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="bg-slate-800/70 backdrop-blur-sm p-6 rounded-xl border border-gold-500/20 mb-8">
                 <h3 className="text-xl font-semibold text-gold-300 mb-4">{editing ? "Edit Doctor" : "Add New Doctor"}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -79,11 +120,16 @@ export default function AdminDoctors() {
                 )}
             </form>
 
-            {/* List */}
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead className="bg-slate-800/70 text-gold-300 uppercase tracking-wider">
-                        <tr><th className="p-3 text-left">Name</th><th className="p-3 text-left">Specialty</th><th className="p-3 text-left">Hospital</th><th className="p-3 text-left">Active</th><th className="p-3 text-left">Actions</th></tr>
+                        <tr>
+                            <th className="p-3 text-left">Name</th>
+                            <th className="p-3 text-left">Specialty</th>
+                            <th className="p-3 text-left">Hospital</th>
+                            <th className="p-3 text-left">Active</th>
+                            <th className="p-3 text-left">Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {doctors.map((doc) => (

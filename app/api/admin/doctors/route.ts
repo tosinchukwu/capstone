@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0xYourAdminWalletAddress";
+import { isAdminWallet } from "@/lib/admin";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get("wallet");
-  if (wallet !== ADMIN_WALLET) {
+  if (!wallet || !(await isAdminWallet(wallet))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -20,7 +19,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get("wallet");
-  if (wallet !== ADMIN_WALLET) {
+  if (!wallet || !(await isAdminWallet(wallet))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -49,7 +48,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get("wallet");
-  if (wallet !== ADMIN_WALLET) {
+  if (!wallet || !(await isAdminWallet(wallet))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -77,7 +76,7 @@ export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get("wallet");
   const id = searchParams.get("id");
-  if (wallet !== ADMIN_WALLET) {
+  if (!wallet || !(await isAdminWallet(wallet))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!id) {

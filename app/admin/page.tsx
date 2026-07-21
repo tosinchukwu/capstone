@@ -2,28 +2,45 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import AdminLayout from "@/components/AdminLayout";
-
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0xYourAdminWalletAddress";
+import { isAdminWallet } from "@/lib/admin";
 
 export default function AdminDashboard() {
   const { address, isConnected } = useAccount();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!isConnected || address !== ADMIN_WALLET) return;
-    fetch(`/api/admin/stats?wallet=${address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setStats(data);
+    if (!isConnected || !address) {
+      setLoading(false);
+      return;
+    }
+    (async () => {
+      const admin = await isAdminWallet(address);
+      setIsAdmin(admin);
+      if (!admin) {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        return;
+      }
+      const res = await fetch(`/api/admin/stats?wallet=${address}`);
+      const data = await res.json();
+      setStats(data);
+      setLoading(false);
+    })();
   }, [address, isConnected]);
 
-  if (!isConnected) return <div className="p-8">Please connect your wallet.</div>;
-  if (address !== ADMIN_WALLET) return <div className="p-8 text-red-500">Unauthorized.</div>;
-  if (loading) return <div className="p-8">Loading stats...</div>;
+  if (!isConnected) {
+    return <div className="p-8 text-center">Please connect your wallet.</div>;
+  }
+  if (!address) {
+    return <div className="p-8 text-center">No wallet address detected.</div>;
+  }
+  if (!isAdmin) {
+    return <div className="p-8 text-red-500 text-center">Unauthorized – you are not an admin.</div>;
+  }
+  if (loading) {
+    return <div className="p-8 text-center">Loading stats...</div>;
+  }
 
   const cards = [
     { label: "Total Appointments", value: stats.totalAppointments, color: "gold" },
