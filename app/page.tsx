@@ -6,12 +6,12 @@ import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import ThemeToggle from "@/components/ThemeToggle";
 import Link from "next/link";
+import HospitalInfo from "@/components/HospitalInfo"; // ✅ new import
 
 export default function Home() {
   const { isConnected, address } = useAccount();
   const [role, setRole] = useState<"patient" | "doctor" | null>(null);
 
-  // Load role from localStorage on mount
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as "patient" | "doctor" | null;
     if (savedRole) setRole(savedRole);
@@ -22,7 +22,6 @@ export default function Home() {
     localStorage.setItem("userRole", selected);
   };
 
-  // If no role selected, show role selector
   if (!role) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -55,7 +54,6 @@ export default function Home() {
     );
   }
 
-  // Render based on role
   return (
     <div className="min-h-screen">
       <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
@@ -104,7 +102,6 @@ export default function Home() {
           </div>
         ) : (
           <div>
-            {/* Patient View */}
             {role === "patient" && (
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
@@ -127,7 +124,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Doctor View */}
             {role === "doctor" && (
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
@@ -158,11 +154,14 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Admin Link at Bottom */}
+      {/* ✅ Updated Footer – Admin Link + Hospital Info */}
       <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4 mt-8">
-        <Link href="/admin" className="hover:text-gold-500 transition-colors">
-          Admin Panel
-        </Link>
+        <div className="flex flex-col items-center gap-2">
+          <Link href="/admin" className="hover:text-gold-500 transition-colors">
+            Admin Panel
+          </Link>
+          <HospitalInfo />
+        </div>
       </footer>
     </div>
   );

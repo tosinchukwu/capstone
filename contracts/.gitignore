@@ -14,5 +14,4 @@ docs/
 .env
 
 lib/
-.gitmodules
-.github
+/.github/workflows/

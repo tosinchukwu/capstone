@@ -47,7 +47,5 @@ next-env.d.ts
 /contracts/cache/
 /contracts/out/
 /contracts/lib/
-/contracts/.gitignore/
-/contracts/.gitmodules/
-/contracts/.github/
+/contracts/.github/workflows/
 
