@@ -42,3 +42,12 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+#Ignore the following files and directories from Contracts folder
+/contracts/cache/
+/contracts/out/
+/contracts/lib/
+/contracts/.gitignore/
+/contracts/.gitmodules/
+/contracts/.github/
+
