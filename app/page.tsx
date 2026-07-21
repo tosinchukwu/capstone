@@ -23,6 +23,7 @@ export default function Home() {
     localStorage.setItem("userRole", selected);
   };
 
+  // Role selector
   if (!role) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -55,40 +56,51 @@ export default function Home() {
     );
   }
 
+  // Main layout
   return (
     <div className="min-h-screen">
-      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          {/* Logo */}
-          <Logo />
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            {isConnected && (
-              <>
-                {role === "doctor" && (
-                  <Link
-                    href="/dashboard"
-                    className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+      {/* Sticky header – logo is separate from navbar */}
+      <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="relative max-w-6xl mx-auto">
+          {/* Logo – floating at top-left, independent of navbar height */}
+          <div className="absolute left-0 top-0 h-full flex items-center">
+            <div className="ml-4">
+              <Logo />
+            </div>
+          </div>
+
+          {/* Navbar panel – compact, pushed to the right, with fixed height */}
+          <div className="flex justify-end items-center h-14 sm:h-16 px-4">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {isConnected && (
+                <>
+                  {role === "doctor" && (
+                    <Link
+                      href="/dashboard"
+                      className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("userRole");
+                      setRole(null);
+                    }}
+                    className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap"
                   >
-                    Dashboard
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    localStorage.removeItem("userRole");
-                    setRole(null);
-                  }}
-                  className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  Switch Role
-                </button>
-              </>
-            )}
-            <ThemeToggle />
-            <ConnectWallet />
+                    Switch Role
+                  </button>
+                </>
+              )}
+              <ThemeToggle />
+              <ConnectWallet />
+            </div>
           </div>
         </div>
-      </nav>
+      </header>
 
+      {/* Main content */}
       <main className="max-w-6xl mx-auto p-3 sm:p-4 mt-4 sm:mt-8">
         {!isConnected ? (
           <div className="text-center py-12 sm:py-20">
@@ -154,6 +166,7 @@ export default function Home() {
         </div>
       </main>
 
+      {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4 mt-8">
         <div className="flex flex-col items-center gap-2">
           <Link href="/admin" className="hover:text-gold-500 transition-colors">
