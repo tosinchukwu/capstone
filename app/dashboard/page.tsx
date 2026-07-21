@@ -116,11 +116,8 @@ export default function DashboardPage() {
     }
   };
 
-  // Status update handler – passes to AppointmentList
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
-      // We need the full appointment data to get chainAppointmentId
-      // Fetch it from the API to get the chainAppointmentId
       const res = await fetch(`/api/appointments/${id}`);
       if (!res.ok) throw new Error("Appointment not found");
       const app = await res.json();
@@ -143,7 +140,6 @@ export default function DashboardPage() {
         console.log("✅ Transaction should be mined");
       }
 
-      // Update the database
       const updateRes = await fetch(`/api/appointments/${id}`, {
         method: "PUT",
         body: JSON.stringify({ status }),
@@ -151,7 +147,6 @@ export default function DashboardPage() {
       });
       if (!updateRes.ok) throw new Error("Failed to update status in database");
 
-      // Refresh the list
       setRefreshKey((prev) => prev + 1);
       alert(`Appointment ${status.toLowerCase()} successfully!`);
     } catch (error) {
@@ -199,7 +194,6 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* ✅ Appointments Section – now with status update and pending state */}
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
         <AppointmentList
@@ -211,7 +205,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Manage Slots Section */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Manage Slots</h2>

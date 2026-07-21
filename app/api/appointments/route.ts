@@ -18,12 +18,44 @@ function serializeBigInt(obj: any): any {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const patientId = searchParams.get("patientId");
+  const patientWallet = searchParams.get("patientWallet");
   const doctorId = searchParams.get("doctorId");
   const status = searchParams.get("status");
 
   const where: any = {};
-  if (patientId) where.patientId = patientId;
-  if (doctorId) where.doctorId = doctorId;
+
+  // Handle patient filtering – support both UUID and wallet
+  if (patientId) {
+    const user = await prisma.user.findUnique({ where: { id: patientId } });
+    if (user) {
+      where.patientId = user.id;
+    } else {
+      const userByWallet = await prisma.user.findUnique({ where: { wallet: patientId } });
+      if (userByWallet) {
+        where.patientId = userByWallet.id;
+      } else {
+        return NextResponse.json([]);
+      }
+    }
+  } else if (patientWallet) {
+    const user = await prisma.user.findUnique({ where: { wallet: patientWallet } });
+    if (user) {
+      where.patientId = user.id;
+    } else {
+      return NextResponse.json([]);
+    }
+  }
+
+  if (doctorId) {
+    // If doctorId is a wallet address, find the user by wallet
+    const doctor = await prisma.user.findUnique({ where: { wallet: doctorId } });
+    if (doctor) {
+      where.doctorId = doctor.id;
+    } else {
+      // Assume it's already a UUID
+      where.doctorId = doctorId;
+    }
+  }
   if (status) where.status = status;
 
   try {

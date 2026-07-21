@@ -15,14 +15,14 @@ interface AppointmentCardProps {
   appointment: Appointment;
   onDelete?: (id: string) => void;
   onStatusUpdate?: (id: string, status: string) => void;
-  isPending?: boolean; // for disabling buttons during transaction
+  isPending?: boolean;
 }
 
-export default function AppointmentCard({ 
-  appointment, 
-  onDelete, 
+export default function AppointmentCard({
+  appointment,
+  onDelete,
   onStatusUpdate,
-  isPending 
+  isPending,
 }: AppointmentCardProps) {
   const { address } = useAccount();
 
@@ -37,12 +37,10 @@ export default function AppointmentCard({
     ? `${appointment.doctor.wallet.slice(0, 6)}...${appointment.doctor.wallet.slice(-4)}`
     : "Unknown";
 
-  // Determine if current user is the doctor
   const isDoctor = address === appointment.doctor?.wallet;
   const isPatient = address === appointment.patient?.wallet;
   const canDelete = isPatient || isDoctor;
 
-  // Status-based button logic
   const canConfirm = isDoctor && appointment.status === "PENDING";
   const canComplete = isDoctor && appointment.status === "CONFIRMED";
   const canReject = isDoctor && appointment.status === "PENDING";
@@ -86,15 +84,14 @@ export default function AppointmentCard({
           <p className="text-sm text-gray-600 mt-1">
             <span className="font-medium">Status:</span>{" "}
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                appointment.status === "CONFIRMED"
+              className={`px-2 py-1 rounded-full text-xs font-medium ${appointment.status === "CONFIRMED"
                   ? "bg-green-100 text-green-800"
                   : appointment.status === "COMPLETED"
-                  ? "bg-blue-100 text-blue-800"
-                  : appointment.status === "CANCELLED"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}
+                    ? "bg-blue-100 text-blue-800"
+                    : appointment.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                }`}
             >
               {appointment.status || "PENDING"}
             </span>
@@ -107,7 +104,6 @@ export default function AppointmentCard({
           >
             View Details →
           </Link>
-          {/* Doctor action buttons */}
           {canConfirm && (
             <button
               onClick={handleConfirm}
@@ -135,7 +131,6 @@ export default function AppointmentCard({
               {isPending ? "Completing..." : "Complete"}
             </button>
           )}
-          {/* Delete button */}
           {canDelete && (
             <button
               onClick={handleDelete}

@@ -14,6 +14,7 @@ type Appointment = {
 
 interface AppointmentListProps {
   patientId?: string;
+  patientWallet?: string;
   doctorId?: string;
   refresh?: number;
   onUpdate?: () => void;
@@ -23,11 +24,12 @@ interface AppointmentListProps {
 
 export default function AppointmentList({
   patientId,
+  patientWallet,
   doctorId,
   refresh,
   onUpdate,
   onStatusUpdate,
-  isPending
+  isPending,
 }: AppointmentListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,7 @@ export default function AppointmentList({
     setLoading(true);
     const params = new URLSearchParams();
     if (patientId) params.append("patientId", patientId);
+    if (patientWallet) params.append("patientWallet", patientWallet);
     if (doctorId) params.append("doctorId", doctorId);
     const url = `/api/appointments?${params.toString()}`;
     fetch(url)
@@ -55,7 +58,7 @@ export default function AppointmentList({
 
   useEffect(() => {
     fetchAppointments();
-  }, [patientId, doctorId, refresh]);
+  }, [patientId, patientWallet, doctorId, refresh]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -96,7 +99,6 @@ export default function AppointmentList({
     );
   }
 
-  // Group by date
   const grouped = appointments.reduce((acc, app) => {
     const date = app.date ? new Date(app.date).toLocaleDateString() : "Unknown";
     if (!acc[date]) acc[date] = [];
