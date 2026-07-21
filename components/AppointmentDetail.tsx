@@ -25,6 +25,7 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const { confirm, isPending: confirmPending } = useConfirmAppointment();
   const { complete, isPending: completePending } = useCompleteAppointment();
 
+  // Fetch DB data
   useEffect(() => {
     if (!id || id < 0) {
       setLoading(false);
@@ -47,21 +48,53 @@ export default function AppointmentDetail({ id }: { id: number }) {
       });
   }, [id]);
 
+  // Safe date formatter
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Not set";
     const d = new Date(dateStr);
     return isNaN(d.getTime()) ? "Invalid date" : d.toLocaleString();
   };
 
+  // Check if contract data is valid (not empty / zero addresses)
+  const hasValidContractData = () => {
+    if (!contractData) return false;
+    const data = contractData as unknown as AppointmentContract;
+    return data.patient !== "0x0000000000000000000000000000000000000000" ||
+      data.doctor !== "0x0000000000000000000000000000000000000000" ||
+      data.date > 0;
+  };
+
   if (loading) return <div className="p-4">Loading appointment details...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
-  if (!dbData || !contractData) return <div className="p-4">No data available.</div>;
 
-  const data = contractData as unknown as AppointmentContract;
-  const { patient, doctor, isConfirmed, isCompleted } = data;
+  // If DB data is missing, show a friendly message
+  if (!dbData) {
+    return (
+      <div className="max-w-2xl mx-auto p-4">
+        <Link href="/" className="inline-flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 mb-4 transition">
+          ← Back to Home
+        </Link>
+        <h1 className="text-2xl font-bold">Appointment #{validId}</h1>
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-yellow-800">⚠️ Appointment data not found in database.</p>
+          <p className="text-sm text-gray-600 mt-2">This appointment may have been deleted or not yet synced.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Determine if contract data exists
+  const contractExists = hasValidContractData();
+  const data = contractData as unknown as AppointmentContract | undefined;
+
+  // Safe display values
+  const patientAddress = data?.patient || "Not on-chain";
+  const doctorAddress = data?.doctor || "Not on-chain";
+  const isConfirmed = data?.isConfirmed || false;
+  const isCompleted = data?.isCompleted || false;
 
   const dbDate = dbData.date ? formatDate(dbData.date) : "Not set";
-  const contractDate = data.date ? new Date(Number(data.date) * 1000).toLocaleString() : "N/A";
+  const contractDate = data?.date ? new Date(Number(data.date) * 1000).toLocaleString() : "N/A";
 
   const handleConfirm = () => {
     confirm([BigInt(validId)]);
@@ -73,9 +106,9 @@ export default function AppointmentDetail({ id }: { id: number }) {
     setTimeout(refetch, 5000);
   };
 
-  const isDoctor = doctor === address;
-  const canConfirm = isDoctor && !isConfirmed;
-  const canComplete = isDoctor && isConfirmed && !isCompleted;
+  const isDoctor = address === data?.doctor;
+  const canConfirm = isDoctor && !isConfirmed && contractExists;
+  const canComplete = isDoctor && isConfirmed && !isCompleted && contractExists;
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -87,9 +120,10 @@ export default function AppointmentDetail({ id }: { id: number }) {
       </Link>
 
       <h1 className="text-2xl font-bold">Appointment #{validId}</h1>
+
       <div className="mt-4 space-y-2">
-        <p><strong>Patient:</strong> {dbData.patient?.name || "Unknown"} ({patient})</p>
-        <p><strong>Doctor:</strong> {dbData.doctor?.name || "Unknown"} ({doctor})</p>
+        <p><strong>Patient:</strong> {dbData.patient?.name || "Unknown"} ({patientAddress})</p>
+        <p><strong>Doctor:</strong> {dbData.doctor?.name || "Unknown"} ({doctorAddress})</p>
         <p><strong>Description:</strong> {dbData.description || "No description"}</p>
         <p><strong>Date (DB):</strong> {dbDate}</p>
         <p><strong>Date (Contract):</strong> {contractDate}</p>
@@ -106,6 +140,16 @@ export default function AppointmentDetail({ id }: { id: number }) {
             {isCompleted ? "COMPLETED" : isConfirmed ? "CONFIRMED" : "PENDING"}
           </span>
         </p>
+
+        {/* Show warning if contract data is missing */}
+        {!contractExists && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-sm text-yellow-800">
+              ⚠️ This appointment is not yet recorded on the blockchain.
+              You may need to wait for the transaction to confirm.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 space-x-2">
