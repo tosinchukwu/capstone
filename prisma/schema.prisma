@@ -28,7 +28,6 @@ model User {
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
 
-  // Doctor-specific
   specialty       String?
   hospital        String?
   location        String?
@@ -53,8 +52,8 @@ model Availability {
   isBooked    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  appointment Appointment? @relation(fields: [appointmentId], references: [id])
-  appointmentId String? @unique
+  // Back‑reference to Appointment – NO @relation attributes here
+  appointment Appointment?
 
   @@index([doctorId, date])
 }
@@ -69,6 +68,7 @@ model Appointment {
   status               AppointmentStatus @default(PENDING)
   createdAt            DateTime @default(now())
 
+  // Foreign key to Availability – relation defined here
   availabilityId       String?  @unique
   availability         Availability? @relation(fields: [availabilityId], references: [id])
 
