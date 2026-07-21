@@ -28,7 +28,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-card p-8 text-center">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            🏥 Health Consultation
+            🏥 Health Consultation Booking Appointment
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
             Are you a patient or a doctor?
