@@ -12,6 +12,7 @@ import HospitalInfo from "@/components/HospitalInfo";
 export default function Home() {
   const { isConnected, address } = useAccount();
   const [role, setRole] = useState<"patient" | "doctor" | null>(null);
+  const [rememberChoice, setRememberChoice] = useState(true);
 
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as "patient" | "doctor" | null;
@@ -20,10 +21,14 @@ export default function Home() {
 
   const selectRole = (selected: "patient" | "doctor") => {
     setRole(selected);
-    localStorage.setItem("userRole", selected);
+    if (rememberChoice) {
+      localStorage.setItem("userRole", selected);
+    } else {
+      sessionStorage.setItem("userRole", selected);
+    }
   };
 
-  // Role selector
+  // Role selector with "Remember my choice"
   if (!role) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -48,8 +53,20 @@ export default function Home() {
               👨‍⚕️ I'm a Doctor
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-6">
-            You can change this later from the "Switch Role" button.
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <input
+              type="checkbox"
+              id="rememberChoice"
+              checked={rememberChoice}
+              onChange={(e) => setRememberChoice(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="rememberChoice" className="text-sm text-gray-500 dark:text-gray-400">
+              Remember my choice
+            </label>
+          </div>
+          <p className="text-xs text-gray-400 mt-4">
+            You can always switch roles later using the "Switch Role" button.
           </p>
         </div>
       </div>
@@ -59,17 +76,13 @@ export default function Home() {
   // Main layout
   return (
     <div className="min-h-screen">
-      {/* ✅ Fixed header – responsive for mobile */}
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
         <div className="relative max-w-6xl mx-auto">
-          {/* Logo – floating at top-left, independent of navbar */}
           <div className="absolute left-0 top-0 h-full flex items-center">
             <div className="ml-2 sm:ml-4">
               <Logo />
             </div>
           </div>
-
-          {/* Navbar panel – compact and responsive */}
           <div className="flex justify-end items-center min-h-14 sm:h-16 px-2 sm:px-4">
             <div className="flex items-center gap-1 sm:gap-3 flex-wrap justify-end">
               {isConnected && (
@@ -100,7 +113,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="max-w-6xl mx-auto p-3 sm:p-4 mt-4 sm:mt-8">
         {!isConnected ? (
           <div className="text-center py-12 sm:py-20">
@@ -166,7 +178,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4 mt-8">
         <div className="flex flex-col items-center gap-2">
           <Link href="/admin" className="hover:text-gold-500 transition-colors">
