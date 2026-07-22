@@ -7,18 +7,24 @@ export default function ConnectWallet() {
   const { address } = useAccount();
   const { data: ensName } = useEnsName({ address });
 
+  const handleLogout = () => {
+    // Clear role and selected doctor from localStorage
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("selectedDoctorId");
+    logout();
+  };
+
   if (!ready) {
     return <div className="animate-pulse text-gray-400 dark:text-gray-500 text-xs sm:text-sm">Loading...</div>;
   }
 
-  // Show display name
   const displayName = authenticated && address
     ? (ensName || `${address.slice(0, 6)}...${address.slice(-4)}`)
     : null;
 
   return (
     <button
-      onClick={authenticated ? logout : login}
+      onClick={authenticated ? handleLogout : login}
       className={`
         px-2 py-1 sm:px-4 sm:py-1.5 rounded-lg text-[10px] sm:text-sm font-medium 
         transition-all hover:shadow-md hover:scale-105 active:scale-95 
@@ -30,7 +36,7 @@ export default function ConnectWallet() {
         }
       `}
     >
-      {authenticated ? `Disconnect ${displayName ? `(${displayName})` : ""}` : "Connect"}
+      {authenticated ? `Disconnect${displayName ? ` (${displayName})` : ""}` : "Connect"}
     </button>
   );
 }
