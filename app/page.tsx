@@ -1,17 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import { useAccount } from "wagmi";
 import AppointmentList from "@/components/AppointmentList";
 import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import ThemeSettings from "@/components/ThemeSettings";
-import Greeting from "@/components/Greeting";   // ✅ new
+import Greeting from "@/components/Greeting";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import HospitalInfo from "@/components/HospitalInfo";
 
 export default function Home() {
-  const { isConnected, address } = useAccount();
+  const { authenticated } = usePrivy();
+  const { address } = useAccount();
   const [role, setRole] = useState<"patient" | "doctor" | null>(null);
   const [rememberChoice, setRememberChoice] = useState(true);
 
@@ -85,7 +87,7 @@ export default function Home() {
           </div>
           <div className="flex justify-end items-center min-h-14 sm:h-16 px-2 sm:px-4">
             <div className="flex items-center gap-1 sm:gap-3 flex-wrap justify-end">
-              {isConnected && (
+              {authenticated && (
                 <>
                   {role === "doctor" && (
                     <Link
@@ -114,7 +116,7 @@ export default function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto p-3 sm:p-4 mt-4 sm:mt-8">
-        {!isConnected ? (
+        {!authenticated ? (
           <div className="text-center py-12 sm:py-20">
             <h2 className="text-2xl sm:text-3xl font-bold theme-text mb-4">
               Welcome to MEDCRUSH Blockchain Hospital
@@ -126,7 +128,7 @@ export default function Home() {
           </div>
         ) : (
           <div>
-            <Greeting />   {/* ✅ added */}
+            <Greeting />
             {role === "patient" && (
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
