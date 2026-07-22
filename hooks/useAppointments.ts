@@ -8,6 +8,7 @@ export function useCreateAppointment() {
 
   const create = (args: any[]) => {
     console.log("⛓️ create() called with args:", args);
+    console.log("⛓️ contractConfig:", contractConfig);
     writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
@@ -24,6 +25,7 @@ export function useConfirmAppointment() {
 
   const confirm = (args: any[]) => {
     console.log("⛓️ confirm() called with args:", args);
+    console.log("⛓️ contractConfig:", contractConfig);
     writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
@@ -39,6 +41,7 @@ export function useCompleteAppointment() {
 
   const complete = (args: any[]) => {
     console.log("⛓️ complete() called with args:", args);
+    console.log("⛓️ contractConfig:", contractConfig);
     writeContract({
       address: contractConfig.address,
       abi: contractConfig.abi,
