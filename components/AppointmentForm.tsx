@@ -191,17 +191,15 @@ export default function AppointmentForm() {
     if (isSuccess && receipt) {
       const saveAppointment = async () => {
         try {
-          // Decode the AppointmentCreated event
+          // Decode the AppointmentCreated event and cast to known shape
           const event = decodeEventLog({
             abi: contractConfig.abi,
             data: receipt.logs[0].data,
             topics: receipt.logs[0].topics,
-          });
+          }) as { args: { appointmentId: bigint; date: bigint } };
 
-          // Extract the real appointmentId
           const appointmentId = Number(event.args.appointmentId);
-          // Extract the contract date (uint256 timestamp)
-          const contractDate = event.args.date; // BigInt
+          const contractDate = event.args.date;
           console.log("✅ Real appointment ID:", appointmentId);
           console.log("✅ Contract date (timestamp):", contractDate);
 
@@ -209,7 +207,6 @@ export default function AppointmentForm() {
           const slot = slots.find((s) => s.id === selectedSlot);
           let dbDate = slot?.date;
           if (!dbDate) {
-            // Convert contract timestamp to ISO string
             dbDate = new Date(Number(contractDate) * 1000).toISOString();
             console.log("⚠️ Slot date missing, using contract date as fallback:", dbDate);
           }
@@ -219,7 +216,7 @@ export default function AppointmentForm() {
             patientWallet: address,
             patientName,
             doctorId: selectedDoctorId,
-            date: dbDate, // ✅ Always defined now
+            date: dbDate,
             description,
             availabilityId: selectedSlot,
             status: "PENDING",
