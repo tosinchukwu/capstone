@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain, useWaitForTransactionReceipt } from "wagmi";
 import { useCreateAppointment } from "@/hooks/useAppointments";
 import { useRouter } from "next/navigation";
 import { sepolia } from "viem/chains";
@@ -44,10 +44,17 @@ export default function AppointmentForm() {
   const [selectedDoctorAddress, setSelectedDoctorAddress] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
-  const { create, isPending } = useCreateAppointment();
+  const { create, isPending, data: createData } = useCreateAppointment();
   const { switchChain } = useSwitchChain();
 
+  // ✅ Wait for transaction receipt
+  const { isLoading: isWaiting, isSuccess, isError } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // Fetch doctors
   const fetchDoctors = () => {
     setLoadingDoctors(true);
     fetch("/api/doctors")
@@ -63,6 +70,7 @@ export default function AppointmentForm() {
     fetchDoctors();
   }, []);
 
+  // Auto‑select doctor if stored ID matches
   useEffect(() => {
     if (doctors.length > 0 && selectedDoctor) {
       const doctor = doctors.find((d) => d.id === selectedDoctor);
@@ -76,6 +84,7 @@ export default function AppointmentForm() {
     }
   }, [doctors, selectedDoctor]);
 
+  // Fetch slots when doctor is selected
   useEffect(() => {
     if (!selectedDoctorId) {
       setSlots([]);
@@ -162,46 +171,60 @@ export default function AppointmentForm() {
 
     try {
       create([doctorAddress, bigIntDate]);
-      console.log("✅ Contract transaction initiated.");
     } catch (err: any) {
       console.error("❌ Contract call failed:", err);
       alert("Contract call failed: " + (err.message || "Unknown error"));
       setIsSubmitting(false);
-      return;
     }
-
-    // Save to database
-    try {
-      const uniqueId = Date.now();
-      const payload = {
-        chainAppointmentId: uniqueId,
-        patientWallet: address,
-        patientName,
-        doctorId: selectedDoctorId,
-        date: slot.date,
-        description,
-        availabilityId: selectedSlot,
-        status: "PENDING",
-      };
-      console.log("📤 Sending payload:", payload);
-      const res = await fetch("/api/appointments", {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save appointment");
-      console.log("✅ Appointment saved:", data);
-    } catch (err: any) {
-      console.error("API call failed:", err);
-      alert("Failed to save appointment to database: " + err.message);
-      setIsSubmitting(false);
-      return;
-    }
-
-    alert("Appointment booked successfully!");
-    router.push("/");
   };
+
+  // ✅ When createData (tx hash) changes, set it for waiting
+  useEffect(() => {
+    if (createData) {
+      setTxHash(createData as `0x${string}`);
+    }
+  }, [createData]);
+
+  // ✅ When transaction is confirmed
+  useEffect(() => {
+    if (isSuccess) {
+      const saveAppointment = async () => {
+        try {
+          const uniqueId = Date.now();
+          const slot = slots.find((s) => s.id === selectedSlot);
+          const payload = {
+            chainAppointmentId: uniqueId,
+            patientWallet: address,
+            patientName,
+            doctorId: selectedDoctorId,
+            date: slot?.date,
+            description,
+            availabilityId: selectedSlot,
+            status: "PENDING",
+          };
+          const res = await fetch("/api/appointments", {
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: { "Content-Type": "application/json" },
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to save appointment");
+          console.log("✅ Appointment saved:", data);
+          alert("Appointment booked successfully!");
+          router.push("/");
+        } catch (err: any) {
+          console.error("API call failed:", err);
+          alert("Failed to save appointment to database: " + err.message);
+          setIsSubmitting(false);
+        }
+      };
+      saveAppointment();
+    }
+    if (isError) {
+      alert("Transaction failed. Please try again.");
+      setIsSubmitting(false);
+    }
+  }, [isSuccess, isError]);
 
   if (loadingDoctors) {
     return <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading doctors...</div>;
@@ -209,6 +232,12 @@ export default function AppointmentForm() {
   if (doctors.length === 0) {
     return <div className="text-center py-8 text-gray-600 dark:text-gray-400">No doctors available.</div>;
   }
+
+  let statusText = "Book Appointment";
+  if (isPending || isSubmitting) statusText = "Sending transaction...";
+  if (isWaiting) statusText = "Confirming on blockchain...";
+  if (isSuccess) statusText = "Confirmed!";
+  const disabled = isPending || isSubmitting || isWaiting || isSuccess;
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4 bg-white dark:bg-gray-800 rounded-xl shadow-card">
@@ -299,9 +328,9 @@ export default function AppointmentForm() {
       <button
         type="submit"
         className="w-full btn-primary"
-        disabled={isPending || isSubmitting || !selectedSlot}
+        disabled={disabled || !selectedSlot}
       >
-        {isPending || isSubmitting ? "Booking..." : "Book Appointment"}
+        {statusText}
       </button>
     </form>
   );
