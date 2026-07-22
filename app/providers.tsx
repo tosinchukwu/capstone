@@ -1,19 +1,20 @@
 "use client";
 
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider as NextThemeProvider } from "next-themes";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
 import { sepolia, localhost } from "viem/chains";
 import { injected, walletConnect } from "wagmi/connectors";
+import { ThemeProvider as AdminThemeProvider } from "@/context/ThemeContext"; // ✅ new
 
 const queryClient = new QueryClient();
 
 export const wagmiConfig = createConfig({
   chains: [sepolia, localhost],
   transports: {
-    [sepolia.id]: http(process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.sepolia.org"),
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_RPC_URL || "https://sepolia.gateway.tenderly.co"),
     [localhost.id]: http("http://127.0.0.1:8545"),
   },
   connectors: [
@@ -28,18 +29,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <PrivyProvider
-        appId={privyAppId}
-        config={{
-          loginMethods: ["email", "wallet", "google"],
-          appearance: { theme: "light", accentColor: "#16a34a" },
-        }}
-      >
-        <QueryClientProvider client={queryClient}>
-          <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
-        </QueryClientProvider>
-      </PrivyProvider>
-    </ThemeProvider>
+    <NextThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AdminThemeProvider> {/* ✅ wrap Privy + Wagmi inside admin theme */}
+        <PrivyProvider
+          appId={privyAppId}
+          config={{
+            loginMethods: ["email", "wallet", "google"],
+            appearance: { theme: "light", accentColor: "#16a34a" },
+            wagmiConfig,
+          }}
+        >
+          <QueryClientProvider client={queryClient}>
+            <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
+          </QueryClientProvider>
+        </PrivyProvider>
+      </AdminThemeProvider>
+    </NextThemeProvider>
   );
 }
