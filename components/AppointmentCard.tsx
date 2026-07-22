@@ -40,7 +40,6 @@ export default function AppointmentCard({
   const isDoctor = address === appointment.doctor?.wallet;
   const isPatient = address === appointment.patient?.wallet;
 
-  // ✅ Delete only allowed for doctors (not patients)
   const canDelete = isDoctor;
 
   const canConfirm = isDoctor && appointment.status === "PENDING";
@@ -48,11 +47,17 @@ export default function AppointmentCard({
   const canReject = isDoctor && appointment.status === "PENDING";
 
   const handleConfirm = () => {
-    if (onStatusUpdate) onStatusUpdate(appointment.id, "CONFIRMED");
+    if (onStatusUpdate) {
+      onStatusUpdate(appointment.id, "CONFIRMED");
+      alert("✅ Confirm transaction sent. Please wait for confirmation.");
+    }
   };
 
   const handleComplete = () => {
-    if (onStatusUpdate) onStatusUpdate(appointment.id, "COMPLETED");
+    if (onStatusUpdate) {
+      onStatusUpdate(appointment.id, "COMPLETED");
+      alert("✅ Complete transaction sent. Please wait for confirmation.");
+    }
   };
 
   const handleReject = () => {
@@ -86,14 +91,15 @@ export default function AppointmentCard({
           <p className="text-sm text-gray-600 mt-1">
             <span className="font-medium">Status:</span>{" "}
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${appointment.status === "CONFIRMED"
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                appointment.status === "CONFIRMED"
                   ? "bg-green-100 text-green-800"
                   : appointment.status === "COMPLETED"
-                    ? "bg-blue-100 text-blue-800"
-                    : appointment.status === "CANCELLED"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-yellow-100 text-yellow-800"
-                }`}
+                  ? "bg-blue-100 text-blue-800"
+                  : appointment.status === "CANCELLED"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}
             >
               {appointment.status || "PENDING"}
             </span>
