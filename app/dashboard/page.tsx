@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ConnectWallet from "@/components/ConnectWallet";
 import AppointmentList from "@/components/AppointmentList";
+import Greeting from "@/components/Greeting";
 import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
 
 type Slot = {
@@ -188,9 +189,9 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <div className="max-w-6xl mx-auto p-4">
-        <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
+        <h1 className="text-2xl font-bold theme-text">Doctor Dashboard</h1>
         <div className="mt-8 text-center py-20">
-          <p className="text-gray-500">Connect your wallet to access the dashboard.</p>
+          <p className="theme-text-secondary">Connect your wallet to access the dashboard.</p>
           <ConnectWallet />
         </div>
       </div>
@@ -198,30 +199,32 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <div className="max-w-6xl mx-auto p-4">Loading...</div>;
+    return <div className="max-w-6xl mx-auto p-4 theme-text">Loading...</div>;
   }
 
   return (
     <div className="max-w-6xl mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Doctor Dashboard</h1>
-        <Link href="/" className="text-primary-600 hover:underline">← Home</Link>
+        <h1 className="text-3xl font-bold theme-text">Doctor Dashboard</h1>
+        <Link href="/" className="theme-accent hover:underline">← Home</Link>
       </div>
 
+      <Greeting />   {/* ✅ added here */}
+
       <div className="mb-4">
-        <Link href="/dashboard/profile" className="text-blue-600 hover:underline">
+        <Link href="/dashboard/profile" className="theme-accent hover:underline">
           Edit Profile →
         </Link>
         <button
           onClick={() => setRefreshKey((prev) => prev + 1)}
-          className="ml-4 text-sm text-blue-600 hover:underline"
+          className="ml-4 text-sm theme-accent hover:underline"
         >
           Refresh Appointments
         </button>
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Appointments</h2>
+        <h2 className="text-2xl font-semibold theme-text mb-4">Appointments</h2>
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
@@ -232,7 +235,7 @@ export default function DashboardPage() {
 
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Manage Slots</h2>
+          <h2 className="text-2xl font-semibold theme-text">Manage Slots</h2>
           <button onClick={refreshSlots} className="btn-secondary text-sm px-3 py-1">
             Refresh Slots
           </button>
@@ -242,38 +245,38 @@ export default function DashboardPage() {
             type="date"
             value={newSlotDate}
             onChange={(e) => setNewSlotDate(e.target.value)}
-            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="p-2 border rounded theme-input theme-border focus:ring-2 focus:ring-accent outline-none"
             required
           />
           <input
             type="time"
             value={newSlotStart}
             onChange={(e) => setNewSlotStart(e.target.value)}
-            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="p-2 border rounded theme-input theme-border focus:ring-2 focus:ring-accent outline-none"
             required
           />
           <input
             type="time"
             value={newSlotEnd}
             onChange={(e) => setNewSlotEnd(e.target.value)}
-            className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="p-2 border rounded theme-input theme-border focus:ring-2 focus:ring-accent outline-none"
             required
           />
           <button type="submit" className="btn-primary">Add Slot</button>
         </form>
 
-        {slots.length === 0 && <p className="text-gray-500">No slots created yet.</p>}
+        {slots.length === 0 && <p className="theme-text-secondary">No slots created yet.</p>}
         <div className="grid gap-2">
           {slots.map((slot) => (
-            <div key={slot.id} className="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 rounded">
-              <span>
+            <div key={slot.id} className="flex justify-between items-center p-3 theme-bg-secondary rounded border theme-border">
+              <span className="theme-text-secondary">
                 {slot.date ? new Date(slot.date).toLocaleDateString() : "No date"} {slot.startTime} - {slot.endTime}
                 {slot.isBooked && " (Booked)"}
               </span>
               {!slot.isBooked && (
                 <button
                   onClick={() => handleDeleteSlot(slot.id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
+                  className="theme-danger hover:opacity-80 text-sm"
                 >
                   Delete
                 </button>
