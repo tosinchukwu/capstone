@@ -3,85 +3,40 @@
 @tailwind utilities;
 
 /* ============================================
-   2 PREMIUM MEDICAL THEMES
+   CLEAN SLATE THEME – Light & Dark via next-themes
    ============================================ */
 
-/* 1. Serene Clinical Blue (default) */
-:root {
-  --theme-bg: #f8fafc;
-  --theme-bg-secondary: #ffffff;
-  --theme-text: #1f2937;
-  --theme-text-secondary: #475569;
-  --theme-accent: #1e88e5;
-  --theme-accent-hover: #1565c0;
-  --theme-border: #e2e8f0;
-  --theme-card: #ffffff80;
-  --theme-input-bg: #f1f5f9;
-  --theme-input-text: #1f2937;
-  --theme-success: #66bb6a;
-  --theme-danger: #ef4444;
-}
-
-[data-theme="healing"] {
-  --theme-bg: #f0fdf4;
-  --theme-bg-secondary: #ffffff;
-  --theme-text: #1f2937;
-  --theme-text-secondary: #475569;
-  --theme-accent: #10b981;
-  --theme-accent-hover: #059669;
-  --theme-border: #d1fae5;
-  --theme-card: #ffffff80;
-  --theme-input-bg: #ecfdf5;
-  --theme-input-text: #1f2937;
-  --theme-success: #34d399;
-  --theme-danger: #ef4444;
-}
-
-/* Global theme classes */
-.theme-bg { background: var(--theme-bg); }
-.theme-bg-secondary { background: var(--theme-bg-secondary); }
-.theme-text { color: var(--theme-text); }
-.theme-text-secondary { color: var(--theme-text-secondary); }
-.theme-accent { color: var(--theme-accent); }
-.theme-accent-bg { background: var(--theme-accent); }
-.theme-accent-bg:hover { background: var(--theme-accent-hover); }
-.theme-border { border-color: var(--theme-border); }
-.theme-card { background: var(--theme-card); backdrop-filter: blur(8px); }
-.theme-input { background: var(--theme-input-bg); color: var(--theme-input-text); }
-.theme-input:focus { outline: 2px solid var(--theme-accent); outline-offset: 2px; }
-.theme-success { color: var(--theme-success); }
-.theme-danger { color: var(--theme-danger); }
-
-/* ============================================
-   BASE STYLES
-   ============================================ */
 @layer base {
   body {
-    @apply min-h-screen transition-colors duration-300;
+    @apply bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen;
     font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
 @layer components {
+  /* Primary button – uses blue accent */
   .btn-primary {
-    @apply theme-accent-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition-all hover:shadow-lg hover:scale-105 active:scale-95;
+    @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all hover:shadow-lg hover:scale-105 active:scale-95 dark:bg-blue-500 dark:hover:bg-blue-600;
   }
   .btn-secondary {
-    @apply bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all hover:shadow-lg hover:scale-105 active:scale-95;
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-6 py-2 rounded-lg transition-all hover:shadow-lg hover:scale-105 active:scale-95;
   }
-  .btn-accent {
-    @apply bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all hover:shadow-lg hover:scale-105 active:scale-95;
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all hover:shadow-lg hover:scale-105 active:scale-95 dark:bg-red-500 dark:hover:bg-red-600;
   }
   .card {
-    @apply theme-bg-secondary theme-border border rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 p-6;
+    @apply bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-gray-200 dark:border-slate-700;
   }
   .card-hover {
-    @apply hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300;
+    @apply hover:-translate-y-1 hover:shadow-xl transition-all duration-300;
   }
   .section-title {
-    @apply text-2xl font-bold theme-text mb-4;
+    @apply text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4;
   }
   .section-subtitle {
-    @apply text-sm theme-text-secondary;
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
+  .input-field {
+    @apply w-full px-4 py-2 border rounded-lg bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 outline-none transition;
   }
 }
