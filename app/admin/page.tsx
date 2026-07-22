@@ -10,15 +10,23 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [checking, setChecking] = useState(true); // prevent unauthorized flash
 
   useEffect(() => {
-    if (!isConnected || !address) {
+    if (!isConnected) {
+      setChecking(false);
+      setLoading(false);
+      return;
+    }
+    if (!address) {
+      setChecking(false);
       setLoading(false);
       return;
     }
     (async () => {
       const admin = await isAdminWallet(address);
       setIsAdmin(admin);
+      setChecking(false);
       if (!admin) {
         setLoading(false);
         return;
@@ -35,12 +43,20 @@ export default function AdminDashboard() {
     })();
   }, [address, isConnected]);
 
-  // Error / unauthorized screens
+  // Show loading while checking admin status
+  if (checking || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-300">Loading...</div>
+      </div>
+    );
+  }
+
   if (!isConnected) {
     return (
-      <div className="p-4 sm:p-8 text-center admin-text">
-        <p>Please connect your wallet.</p>
-        <Link href="/" className="mt-4 inline-block admin-accent-bg text-slate-900 px-4 py-2 rounded-lg hover:opacity-90 transition">
+      <div className="p-4 sm:p-8 text-center">
+        <p className="text-gray-700 dark:text-gray-300">Please connect your wallet.</p>
+        <Link href="/" className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
           🏠 Go Home
         </Link>
       </div>
@@ -48,9 +64,9 @@ export default function AdminDashboard() {
   }
   if (!address) {
     return (
-      <div className="p-4 sm:p-8 text-center admin-text">
-        <p>No wallet address detected.</p>
-        <Link href="/" className="mt-4 inline-block admin-accent-bg text-slate-900 px-4 py-2 rounded-lg hover:opacity-90 transition">
+      <div className="p-4 sm:p-8 text-center">
+        <p className="text-gray-700 dark:text-gray-300">No wallet address detected.</p>
+        <Link href="/" className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
           🏠 Go Home
         </Link>
       </div>
@@ -59,14 +75,13 @@ export default function AdminDashboard() {
   if (!isAdmin) {
     return (
       <div className="p-4 sm:p-8 text-center">
-        <p className="text-red-400 text-lg font-semibold">⛔ Unauthorized – you are not an admin.</p>
-        <Link href="/" className="mt-4 inline-block admin-accent-bg text-slate-900 px-4 py-2 rounded-lg hover:opacity-90 transition">
+        <p className="text-red-600 dark:text-red-400 text-lg font-semibold">⛔ Unauthorized – you are not an admin.</p>
+        <Link href="/" className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
           🏠 Go Home
         </Link>
       </div>
     );
   }
-  if (loading) return <div className="p-4 sm:p-8 text-center admin-text">Loading stats...</div>;
 
   const cards = [
     { label: "Total Appointments", value: stats?.totalAppointments || 0 },
@@ -80,12 +95,12 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout wallet={address}>
-      <h2 className="text-2xl sm:text-3xl font-serif admin-accent mb-4 sm:mb-6">Dashboard</h2>
+      <h2 className="text-2xl sm:text-3xl font-serif text-blue-600 dark:text-blue-400 mb-4 sm:mb-6">Dashboard</h2>
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {cards.map((card) => (
-          <div key={card.label} className="admin-card border admin-border rounded-xl p-4 sm:p-6 shadow-lg">
-            <p className="text-xs sm:text-sm admin-text-secondary uppercase tracking-wider">{card.label}</p>
-            <p className="text-xl sm:text-3xl font-bold admin-text">{card.value}</p>
+          <div key={card.label} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-4 sm:p-6 shadow-md">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider">{card.label}</p>
+            <p className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">{card.value}</p>
           </div>
         ))}
       </div>
