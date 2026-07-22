@@ -12,7 +12,7 @@ export default function ConnectWallet() {
     <button
       onClick={authenticated ? logout : login}
       className={`
-        px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium 
+        px-2 py-1 sm:px-4 sm:py-1.5 rounded-lg text-[10px] sm:text-sm font-medium 
         transition-all hover:shadow-md hover:scale-105 active:scale-95 
         whitespace-nowrap
         ${authenticated

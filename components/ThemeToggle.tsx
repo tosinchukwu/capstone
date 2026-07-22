@@ -11,7 +11,7 @@ export default function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="w-7 h-7 sm:w-8 sm:h-8" />;
+    return <div className="w-6 h-6 sm:w-8 sm:h-8" />;
   }
 
   const isDark = theme === "dark";
@@ -19,7 +19,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="p-1.5 sm:p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      className="p-1 sm:p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
       aria-label="Toggle theme"
     >
       {isDark ? (
