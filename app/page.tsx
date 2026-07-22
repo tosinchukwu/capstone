@@ -5,6 +5,7 @@ import AppointmentList from "@/components/AppointmentList";
 import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSelector from "@/components/ThemeSelector";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import HospitalInfo from "@/components/HospitalInfo";
@@ -28,7 +29,7 @@ export default function Home() {
     }
   };
 
-  // Role selector with "Remember my choice"
+  // Role selector
   if (!role) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -106,6 +107,7 @@ export default function Home() {
                   </button>
                 </>
               )}
+              <ThemeSelector />
               <ThemeToggle />
               <ConnectWallet />
             </div>
