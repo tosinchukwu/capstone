@@ -4,8 +4,7 @@ import { useAccount } from "wagmi";
 import AppointmentList from "@/components/AppointmentList";
 import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
-import ThemeToggle from "@/components/ThemeToggle";
-import ThemeSelector from "@/components/ThemeSelector";
+import ThemeSettings from "@/components/ThemeSettings";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import HospitalInfo from "@/components/HospitalInfo";
@@ -107,8 +106,7 @@ export default function Home() {
                   </button>
                 </>
               )}
-              <ThemeSelector />
-              <ThemeToggle />
+              <ThemeSettings />
               <ConnectWallet />
             </div>
           </div>
