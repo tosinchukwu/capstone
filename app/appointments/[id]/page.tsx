@@ -25,8 +25,14 @@ export default function DetailPage() {
       });
   }, [id]);
 
-  if (loading) return <div className="p-4">Loading appointment...</div>;
-  if (!chainId) return <div className="p-4">Appointment not found.</div>;
+  if (loading) return <div className="p-4 text-center">Loading appointment...</div>;
+  if (!chainId) return <div className="p-4 text-center text-red-500">Appointment not found.</div>;
 
-  return <AppointmentDetail id={chainId} />;
+  return (
+    <div className="min-h-screen py-4 sm:py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        <AppointmentDetail id={chainId} />
+      </div>
+    </div>
+  );
 }
