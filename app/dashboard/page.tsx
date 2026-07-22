@@ -121,23 +121,34 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ FIXED: updateAppointmentStatus function
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
+      // 1. Fetch the appointment to get chainAppointmentId
       const res = await fetch(`/api/appointments/${id}`);
       if (!res.ok) throw new Error("Appointment not found");
       const app = await res.json();
 
+      // 2. Validate chainAppointmentId
+      const chainId = Number(app.chainAppointmentId);
+      if (!chainId || chainId === 0) {
+        alert("❌ Invalid appointment ID. Please refresh and try again.");
+        return;
+      }
+
+      // 3. For CONFIRMED or COMPLETED – call the contract
       if (status === "CONFIRMED") {
-        const chainId = BigInt(app.chainAppointmentId);
+        console.log("⛓️ Calling confirmAppointment with chainId:", chainId);
+        confirmAppointment([BigInt(chainId)]);
         setPendingUpdate({ id, status });
-        confirmAppointment([chainId]);
-        alert("⏳ Confirm transaction sent. Waiting for confirmation...");
+        alert("⏳ Confirm transaction sent. Please approve in your wallet.");
       } else if (status === "COMPLETED") {
-        const chainId = BigInt(app.chainAppointmentId);
+        console.log("⛓️ Calling completeAppointment with chainId:", chainId);
+        completeAppointment([BigInt(chainId)]);
         setPendingUpdate({ id, status });
-        completeAppointment([chainId]);
-        alert("⏳ Complete transaction sent. Waiting for confirmation...");
+        alert("⏳ Complete transaction sent. Please approve in your wallet.");
       } else if (status === "CANCELLED") {
+        // No contract call – just update DB
         const updateRes = await fetch(`/api/appointments/${id}`, {
           method: "PUT",
           body: JSON.stringify({ status }),
