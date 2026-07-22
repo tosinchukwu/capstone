@@ -31,22 +31,18 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      // ✅ FIX: parse yearsExperience to number or null
       const payload = {
         ...profile,
         wallet: address,
         yearsExperience: profile.yearsExperience ? parseInt(profile.yearsExperience) : null,
       };
-
       const res = await fetch("/api/doctors/profile", {
         method: "PUT",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Update failed");
-      }
+      if (!res.ok) throw new Error(data.error || "Update failed");
       alert("Profile updated successfully!");
       router.push("/dashboard");
     } catch (err: any) {
@@ -56,14 +52,16 @@ export default function ProfilePage() {
     }
   };
 
-  if (!isConnected) return <div className="p-4">Please connect your wallet.</div>;
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (!isConnected) return <div className="p-4 text-center">Please connect your wallet.</div>;
+  if (loading) return <div className="p-4 text-center">Loading...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="max-w-2xl mx-auto p-4 sm:p-6">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Edit Doctor Profile</h1>
-        <Link href="/dashboard" className="text-primary-600 hover:underline">← Dashboard</Link>
+        <h1 className="text-2xl sm:text-3xl font-bold">Edit Doctor Profile</h1>
+        <Link href="/dashboard" className="text-primary-600 hover:underline text-sm sm:text-base">
+          ← Dashboard
+        </Link>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -72,7 +70,7 @@ export default function ProfilePage() {
             type="text"
             value={profile.name || ""}
             onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
             required
           />
         </div>
@@ -82,7 +80,7 @@ export default function ProfilePage() {
             type="email"
             value={profile.email || ""}
             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
         <div>
@@ -91,7 +89,7 @@ export default function ProfilePage() {
             type="text"
             value={profile.specialty || ""}
             onChange={(e) => setProfile({ ...profile, specialty: e.target.value })}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
         <div>
@@ -100,7 +98,7 @@ export default function ProfilePage() {
             type="text"
             value={profile.hospital || ""}
             onChange={(e) => setProfile({ ...profile, hospital: e.target.value })}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
         <div>
@@ -109,7 +107,7 @@ export default function ProfilePage() {
             type="text"
             value={profile.location || ""}
             onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
         <div>
@@ -118,7 +116,7 @@ export default function ProfilePage() {
             type="number"
             value={profile.yearsExperience || ""}
             onChange={(e) => setProfile({ ...profile, yearsExperience: e.target.value })}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
         <div>
@@ -127,7 +125,7 @@ export default function ProfilePage() {
             value={profile.bio || ""}
             onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
             rows={4}
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
         <div>
@@ -140,7 +138,7 @@ export default function ProfilePage() {
             Auto-confirm appointments
           </label>
         </div>
-        <button type="submit" className="btn-primary w-full" disabled={saving}>
+        <button type="submit" className="btn-primary w-full py-3" disabled={saving}>
           {saving ? "Saving..." : "Update Profile"}
         </button>
       </form>
