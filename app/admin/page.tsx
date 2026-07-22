@@ -23,26 +23,27 @@ export default function AdminDashboard() {
       return;
     }
     (async () => {
-      const admin = await isAdminWallet(address);
-      setIsAdmin(admin);
-      if (!admin) {
-        setLoading(false);
-        return;
-      }
       try {
+        const admin = await isAdminWallet(address);
+        setIsAdmin(admin);
+        if (!admin) {
+          setLoading(false);
+          return;
+        }
         const res = await fetch(`/api/admin/stats?wallet=${address}`);
         if (!res.ok) throw new Error("Failed to fetch stats");
         const data = await res.json();
         setStats(data);
       } catch (err) {
-        console.error("Stats error:", err);
+        console.error("Error loading admin stats:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [address, isConnected, router]);
 
   if (!isConnected || !address) {
-    return null; // will redirect
+    return null; // redirecting
   }
 
   if (loading) {
