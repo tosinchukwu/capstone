@@ -121,7 +121,7 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ FIXED: updateAppointmentStatus function
+  // ✅ FIXED: updateAppointmentStatus – validates chainAppointmentId and calls contract
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       // 1. Fetch the appointment to get chainAppointmentId
