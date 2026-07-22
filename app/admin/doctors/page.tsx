@@ -36,13 +36,19 @@ export default function AdminDoctors() {
       return;
     }
     (async () => {
-      const admin = await isAdminWallet(address);
-      setIsAdmin(admin);
-      if (!admin) {
+      try {
+        const admin = await isAdminWallet(address);
+        setIsAdmin(admin);
+        if (!admin) {
+          setLoading(false);
+          return;
+        }
+        await fetchDoctors();
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLoading(false);
-        return;
       }
-      await fetchDoctors();
     })();
   }, [address, isConnected, router]);
 
@@ -55,7 +61,6 @@ export default function AdminDoctors() {
     } catch (err) {
       console.error(err);
     }
-    setLoading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -171,4 +176,4 @@ export default function AdminDoctors() {
       </div>
     </AdminLayout>
   );
-} 
+}
