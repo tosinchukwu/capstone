@@ -179,36 +179,47 @@ export default function AppointmentForm() {
     }
   };
 
-  // ✅ When createData (tx hash) changes, set it for waiting
+  // When tx hash changes, set it for waiting
   useEffect(() => {
     if (createData) {
       setTxHash(createData as `0x${string}`);
     }
   }, [createData]);
 
-  // ✅ When transaction is confirmed, parse event and save to DB
+  // When transaction is confirmed, parse event and save to DB
   useEffect(() => {
     if (isSuccess && receipt) {
       const saveAppointment = async () => {
         try {
-          // Decode the AppointmentCreated event from the receipt logs
+          // Decode the AppointmentCreated event
           const event = decodeEventLog({
             abi: contractConfig.abi,
             data: receipt.logs[0].data,
             topics: receipt.logs[0].topics,
           });
 
-          // Extract the real appointmentId (not Date.now())
+          // Extract the real appointmentId
           const appointmentId = Number(event.args.appointmentId);
-          console.log("✅ Real appointment ID from contract:", appointmentId);
+          // Extract the contract date (uint256 timestamp)
+          const contractDate = event.args.date; // BigInt
+          console.log("✅ Real appointment ID:", appointmentId);
+          console.log("✅ Contract date (timestamp):", contractDate);
 
+          // Use slot date if available, otherwise fallback to contract date
           const slot = slots.find((s) => s.id === selectedSlot);
+          let dbDate = slot?.date;
+          if (!dbDate) {
+            // Convert contract timestamp to ISO string
+            dbDate = new Date(Number(contractDate) * 1000).toISOString();
+            console.log("⚠️ Slot date missing, using contract date as fallback:", dbDate);
+          }
+
           const payload = {
-            chainAppointmentId: appointmentId, // ✅ Correct on-chain ID
+            chainAppointmentId: appointmentId,
             patientWallet: address,
             patientName,
             doctorId: selectedDoctorId,
-            date: slot?.date,
+            date: dbDate, // ✅ Always defined now
             description,
             availabilityId: selectedSlot,
             status: "PENDING",
