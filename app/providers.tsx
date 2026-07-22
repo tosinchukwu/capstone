@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
 import { sepolia, localhost } from "viem/chains";
 import { injected, walletConnect } from "wagmi/connectors";
-import { ThemeProvider as AdminThemeProvider } from "@/context/ThemeContext";
 
 const queryClient = new QueryClient();
 
@@ -30,22 +29,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <NextThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AdminThemeProvider>
-        <PrivyProvider
-          appId={privyAppId}
-          config={{
-            loginMethods: ["email", "wallet", "google"],
-            appearance: { theme: "light", accentColor: "#16a34a" },
-            // ✅ wagmiConfig is NOT passed here – it goes to WagmiProvider below
-          }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <WagmiProvider config={wagmiConfig}>
-              {children}
-            </WagmiProvider>
-          </QueryClientProvider>
-        </PrivyProvider>
-      </AdminThemeProvider>
+      <PrivyProvider
+        appId={privyAppId}
+        config={{
+          loginMethods: ["email", "wallet", "google"],
+          appearance: { theme: "light", accentColor: "#2563eb" },
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <WagmiProvider config={wagmiConfig}>
+            {children}
+          </WagmiProvider>
+        </QueryClientProvider>
+      </PrivyProvider>
     </NextThemeProvider>
   );
 }
