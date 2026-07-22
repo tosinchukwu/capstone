@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
 
-export type Theme = "navy" | "teal" | "neon";
+export type Theme = "clinical" | "healing";
 
 type ThemeContextType = {
   theme: Theme;
@@ -9,21 +9,21 @@ type ThemeContextType = {
 };
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "navy",
+  theme: "clinical",
   setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("navy");
+  const [theme, setTheme] = useState<Theme>("clinical");
 
   useEffect(() => {
-    const saved = localStorage.getItem("adminTheme") as Theme | null;
+    const saved = localStorage.getItem("appTheme") as Theme | null;
     if (saved) setTheme(saved);
   }, []);
 
   const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);
-    localStorage.setItem("adminTheme", newTheme);
+    localStorage.setItem("appTheme", newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
   };
 
