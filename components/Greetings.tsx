@@ -1,8 +1,10 @@
 "use client";
+import { usePrivy } from "@privy-io/react-auth";
 import { useAccount, useEnsName } from "wagmi";
 
 export default function Greeting() {
-  const { address, isConnected } = useAccount();
+  const { authenticated } = usePrivy();
+  const { address } = useAccount();
   const { data: ensName } = useEnsName({ address });
 
   const getGreeting = () => {
@@ -13,7 +15,7 @@ export default function Greeting() {
     return "Good Night";
   };
 
-  if (!isConnected || !address) return null;
+  if (!authenticated || !address) return null;
 
   const displayName = ensName || `${address.slice(0, 6)}...${address.slice(-4)}`;
 
