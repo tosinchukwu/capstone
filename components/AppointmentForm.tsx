@@ -4,6 +4,8 @@ import { useAccount, useSwitchChain, useWaitForTransactionReceipt } from "wagmi"
 import { useCreateAppointment } from "@/hooks/useAppointments";
 import { useRouter } from "next/navigation";
 import { sepolia } from "viem/chains";
+import { decodeEventLog } from "viem";
+import { contractConfig } from "@/lib/contract";
 
 type Doctor = {
   id: string;
@@ -49,8 +51,7 @@ export default function AppointmentForm() {
   const { create, isPending, data: createData } = useCreateAppointment();
   const { switchChain } = useSwitchChain();
 
-  // ✅ Wait for transaction receipt
-  const { isLoading: isWaiting, isSuccess, isError } = useWaitForTransactionReceipt({
+  const { isLoading: isWaiting, isSuccess, isError, data: receipt } = useWaitForTransactionReceipt({
     hash: txHash,
   });
 
@@ -185,15 +186,25 @@ export default function AppointmentForm() {
     }
   }, [createData]);
 
-  // ✅ When transaction is confirmed
+  // ✅ When transaction is confirmed, parse event and save to DB
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && receipt) {
       const saveAppointment = async () => {
         try {
-          const uniqueId = Date.now();
+          // Decode the AppointmentCreated event from the receipt logs
+          const event = decodeEventLog({
+            abi: contractConfig.abi,
+            data: receipt.logs[0].data,
+            topics: receipt.logs[0].topics,
+          });
+
+          // Extract the real appointmentId (not Date.now())
+          const appointmentId = Number(event.args.appointmentId);
+          console.log("✅ Real appointment ID from contract:", appointmentId);
+
           const slot = slots.find((s) => s.id === selectedSlot);
           const payload = {
-            chainAppointmentId: uniqueId,
+            chainAppointmentId: appointmentId, // ✅ Correct on-chain ID
             patientWallet: address,
             patientName,
             doctorId: selectedDoctorId,
@@ -202,6 +213,7 @@ export default function AppointmentForm() {
             availabilityId: selectedSlot,
             status: "PENDING",
           };
+
           const res = await fetch("/api/appointments", {
             method: "POST",
             body: JSON.stringify(payload),
@@ -209,12 +221,12 @@ export default function AppointmentForm() {
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || "Failed to save appointment");
-          console.log("✅ Appointment saved:", data);
+          console.log("✅ Appointment saved with real ID:", data);
           alert("Appointment booked successfully!");
           router.push("/");
         } catch (err: any) {
-          console.error("API call failed:", err);
-          alert("Failed to save appointment to database: " + err.message);
+          console.error("❌ Error saving appointment:", err);
+          alert("Appointment was created on-chain but failed to save to database: " + err.message);
           setIsSubmitting(false);
         }
       };
@@ -224,7 +236,7 @@ export default function AppointmentForm() {
       alert("Transaction failed. Please try again.");
       setIsSubmitting(false);
     }
-  }, [isSuccess, isError]);
+  }, [isSuccess, isError, receipt]);
 
   if (loadingDoctors) {
     return <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading doctors...</div>;
