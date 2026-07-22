@@ -20,10 +20,14 @@ export async function GET() {
     return NextResponse.json(settings);
   } catch (error) {
     console.error("Error fetching hospital settings:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch settings" },
-      { status: 500 }
-    );
+    // Fallback – return a default object so the frontend never breaks
+    return NextResponse.json({
+      name: "MEDCRUSH BLOCKCHAIN HOSPITAL",
+      email: "medcrush@gmail.com",
+      phone: "08023000000",
+      address: "2, Hospital Road, Benin",
+      adminWallets: [process.env.NEXT_PUBLIC_ADMIN_WALLET || ""].filter(Boolean),
+    });
   }
 }
 
