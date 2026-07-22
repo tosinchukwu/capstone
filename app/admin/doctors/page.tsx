@@ -171,4 +171,4 @@ export default function AdminDoctors() {
       </div>
     </AdminLayout>
   );
-}
+} 
