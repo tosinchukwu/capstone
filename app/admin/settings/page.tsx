@@ -44,14 +44,19 @@ export default function AdminSettings() {
       return;
     }
     (async () => {
-      const admin = await isAdminWallet(address);
-      setIsAdmin(admin);
-      if (!admin) {
+      try {
+        const admin = await isAdminWallet(address);
+        setIsAdmin(admin);
+        if (!admin) {
+          setLoading(false);
+          return;
+        }
+        await fetchSettings();
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLoading(false);
-        return;
       }
-      await fetchSettings();
-      setLoading(false);
     })();
   }, [address, isConnected, router]);
 
