@@ -82,7 +82,7 @@ export default function AppointmentList({
     return (
       <div className="grid gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="border rounded-lg p-4 animate-pulse bg-gray-100 h-24" />
+          <div key={i} className="border rounded-lg p-4 animate-pulse bg-gray-100 dark:bg-slate-700 h-24" />
         ))}
       </div>
     );
@@ -90,9 +90,9 @@ export default function AppointmentList({
 
   if (appointments.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg shadow">
-        <p className="text-gray-500">No appointments yet</p>
-        <p className="text-sm text-gray-400 mt-2">
+      <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow">
+        <p className="text-gray-500 dark:text-gray-400">No appointments yet</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
           Click "New Appointment" to book a consultation
         </p>
       </div>
