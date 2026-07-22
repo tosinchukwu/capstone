@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import AdminLayout from "@/components/AdminLayout";
 import { isAdminWallet } from "@/lib/admin";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const { address, isConnected } = useAccount();
@@ -29,9 +30,37 @@ export default function AdminDashboard() {
     })();
   }, [address, isConnected]);
 
-  if (!isConnected) return <div className="p-4 sm:p-8 text-center">Please connect your wallet.</div>;
-  if (!address) return <div className="p-4 sm:p-8 text-center">No wallet address detected.</div>;
-  if (!isAdmin) return <div className="p-4 sm:p-8 text-red-500 text-center">Unauthorized – you are not an admin.</div>;
+  // ✅ Home button included on all error/unauthorized screens
+  if (!isConnected) {
+    return (
+      <div className="p-4 sm:p-8 text-center">
+        <p>Please connect your wallet.</p>
+        <Link href="/" className="mt-4 inline-block bg-gold-500 text-slate-900 px-4 py-2 rounded-lg">
+          Go Home
+        </Link>
+      </div>
+    );
+  }
+  if (!address) {
+    return (
+      <div className="p-4 sm:p-8 text-center">
+        <p>No wallet address detected.</p>
+        <Link href="/" className="mt-4 inline-block bg-gold-500 text-slate-900 px-4 py-2 rounded-lg">
+          Go Home
+        </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="p-4 sm:p-8 text-center">
+        <p className="text-red-500 text-lg font-semibold">⛔ Unauthorized – you are not an admin.</p>
+        <Link href="/" className="mt-4 inline-block bg-gold-500 text-slate-900 px-4 py-2 rounded-lg">
+          Go Home
+        </Link>
+      </div>
+    );
+  }
   if (loading) return <div className="p-4 sm:p-8 text-center">Loading stats...</div>;
 
   const cards = [
