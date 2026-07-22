@@ -1,30 +1,41 @@
 "use client";
-import { useTheme } from "@/context/ThemeContext";
+import { createContext, useContext, useState, useEffect } from "react";
 
-const themes = [
-  { name: "Navy Gold", value: "navy" },
-  { name: "Teal Mint", value: "teal" },
-  { name: "Dark Neon", value: "neon" },
-];
+export type Theme = "midnight" | "rosegold" | "charcoal" | "classic";
 
-export default function ThemeSelector() {
-  const { theme, setTheme } = useTheme();
+type ThemeContextType = {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+};
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "midnight",
+  setTheme: () => {},
+});
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>("midnight");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("adminTheme") as Theme | null;
+    if (saved) setTheme(saved);
+  }, []);
+
+  const handleSetTheme = (newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem("adminTheme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {themes.map((t) => (
-        <button
-          key={t.value}
-          onClick={() => setTheme(t.value as any)}
-          className={`px-2 py-1 text-xs rounded transition ${
-            theme === t.value
-              ? "bg-primary-600 text-white dark:bg-primary-400"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          }`}
-        >
-          {t.name}
-        </button>
-      ))}
-    </div>
+    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>
+      {children}
+    </ThemeContext.Provider>
   );
 }
+
+export const useTheme = () => useContext(ThemeContext);
