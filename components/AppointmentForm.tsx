@@ -55,7 +55,6 @@ export default function AppointmentForm() {
     hash: txHash,
   });
 
-  // Fetch doctors
   const fetchDoctors = () => {
     setLoadingDoctors(true);
     fetch("/api/doctors")
@@ -71,7 +70,6 @@ export default function AppointmentForm() {
     fetchDoctors();
   }, []);
 
-  // Auto‑select doctor if stored ID matches
   useEffect(() => {
     if (doctors.length > 0 && selectedDoctor) {
       const doctor = doctors.find((d) => d.id === selectedDoctor);
@@ -85,7 +83,6 @@ export default function AppointmentForm() {
     }
   }, [doctors, selectedDoctor]);
 
-  // Fetch slots when doctor is selected
   useEffect(() => {
     if (!selectedDoctorId) {
       setSlots([]);
@@ -179,19 +176,16 @@ export default function AppointmentForm() {
     }
   };
 
-  // When tx hash changes, set it for waiting
   useEffect(() => {
     if (createData) {
       setTxHash(createData as `0x${string}`);
     }
   }, [createData]);
 
-  // When transaction is confirmed, parse event and save to DB
   useEffect(() => {
     if (isSuccess && receipt) {
       const saveAppointment = async () => {
         try {
-          // Decode the AppointmentCreated event and cast to known shape
           const event = decodeEventLog({
             abi: contractConfig.abi,
             data: receipt.logs[0].data,
@@ -203,7 +197,6 @@ export default function AppointmentForm() {
           console.log("✅ Real appointment ID:", appointmentId);
           console.log("✅ Contract date (timestamp):", contractDate);
 
-          // Use slot date if available, otherwise fallback to contract date
           const slot = slots.find((s) => s.id === selectedSlot);
           let dbDate = slot?.date;
           if (!dbDate) {
@@ -260,16 +253,16 @@ export default function AppointmentForm() {
   const disabled = isPending || isSubmitting || isWaiting || isSuccess;
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4 bg-white dark:bg-gray-800 rounded-xl shadow-card">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4 bg-white dark:bg-slate-800 rounded-xl shadow-card">
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Appointment</h1>
 
       <div>
         <label className="block text-sm font-medium">Select Doctor</label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <select
             value={selectedDoctor}
             onChange={handleDoctorSelect}
-            className="flex-1 p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+            className="flex-1 min-w-[120px] p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 text-sm"
             required
           >
             <option value="">Choose a doctor...</option>
@@ -282,7 +275,7 @@ export default function AppointmentForm() {
           <button
             type="button"
             onClick={refreshDoctors}
-            className="text-sm text-blue-600 hover:text-blue-800 underline whitespace-nowrap"
+            className="text-xs text-blue-600 hover:text-blue-800 underline whitespace-nowrap"
             disabled={loadingDoctors}
           >
             {loadingDoctors ? "..." : "⟳ Refresh"}
@@ -307,7 +300,7 @@ export default function AppointmentForm() {
             <select
               value={selectedSlot}
               onChange={handleSlotSelect}
-              className="w-full p-2 border rounded-lg"
+              className="w-full p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"
               required
             >
               <option value="">Select a slot...</option>
@@ -328,7 +321,7 @@ export default function AppointmentForm() {
           placeholder="Enter your full name"
           value={patientName}
           onChange={(e) => setPatientName(e.target.value)}
-          className="w-full p-2 border rounded-lg"
+          className="w-full p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"
           required
         />
       </div>
@@ -339,7 +332,7 @@ export default function AppointmentForm() {
           placeholder="Describe your symptoms"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded-lg"
+          className="w-full p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"
           rows={4}
           required
         />
