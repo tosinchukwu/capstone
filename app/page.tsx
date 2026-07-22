@@ -6,6 +6,7 @@ import AppointmentList from "@/components/AppointmentList";
 import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import Greeting from "@/components/Greeting";
+import ThemeSettings from "@/components/ThemeSettings";  // ✅ re-added
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import HospitalInfo from "@/components/HospitalInfo";
@@ -79,12 +80,14 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
         <div className="relative max-w-6xl mx-auto">
+          {/* Logo – absolute left */}
           <div className="absolute left-0 top-0 h-full flex items-center">
             <div className="ml-2 sm:ml-4">
               <Logo />
             </div>
           </div>
-          <div className="flex justify-end items-center min-h-14 sm:h-16 px-2 sm:px-4">
+          {/* Navbar items – with enough left padding to avoid overlap */}
+          <div className="flex justify-end items-center min-h-14 sm:h-16 px-2 sm:px-4 pl-20 sm:pl-28 md:pl-32">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
               {authenticated && (
                 <>
@@ -107,6 +110,7 @@ export default function Home() {
                   </button>
                 </>
               )}
+              <ThemeSettings />   {/* ✅ gear icon now visible */}
               <ConnectWallet />
             </div>
           </div>
@@ -134,9 +138,7 @@ export default function Home() {
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
                       Your Appointments
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                      Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-                    </p>
+                    {/* ✅ Removed duplicate address line – greeting already shows it */}
                   </div>
                   <Link
                     href="/appointments/create"
@@ -156,9 +158,7 @@ export default function Home() {
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
                       Doctor Dashboard
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                      Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-                    </p>
+                    {/* ✅ Removed duplicate address line */}
                   </div>
                   <Link
                     href="/dashboard"
