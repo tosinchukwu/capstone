@@ -6,7 +6,6 @@ export async function GET() {
   try {
     let settings = await prisma.hospitalSettings.findFirst();
     if (!settings) {
-      // Create default settings with the environment admin wallet as initial whitelist
       const initialAdmin = process.env.NEXT_PUBLIC_ADMIN_WALLET || "";
       settings = await prisma.hospitalSettings.create({
         data: {
@@ -62,7 +61,7 @@ export async function PUT(request: Request) {
   } catch (error) {
     console.error("Error updating hospital settings:", error);
     return NextResponse.json(
-      { error: "Failed to update settings" },
+      { error: "Failed to update settings: " + (error as Error).message },
       { status: 500 }
     );
   }
