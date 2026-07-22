@@ -85,13 +85,13 @@ export default function Home() {
             </div>
           </div>
           <div className="flex justify-end items-center min-h-14 sm:h-16 px-2 sm:px-4">
-            <div className="flex items-center gap-1 sm:gap-3 flex-wrap justify-end">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
               {authenticated && (
                 <>
                   {role === "doctor" && (
                     <Link
                       href="/dashboard"
-                      className="text-[10px] sm:text-sm text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+                      className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
                     >
                       Dashboard
                     </Link>
@@ -101,7 +101,7 @@ export default function Home() {
                       localStorage.removeItem("userRole");
                       setRole(null);
                     }}
-                    className="text-[10px] sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap"
+                    className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap"
                   >
                     Switch Role
                   </button>
