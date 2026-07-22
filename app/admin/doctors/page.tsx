@@ -1,17 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 import AdminLayout from "@/components/AdminLayout";
 import { isAdminWallet } from "@/lib/admin";
 import Link from "next/link";
 
 export default function AdminDoctors() {
   const { address, isConnected } = useAccount();
+  const router = useRouter();
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [checking, setChecking] = useState(true);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -27,26 +28,23 @@ export default function AdminDoctors() {
 
   useEffect(() => {
     if (!isConnected) {
-      setChecking(false);
-      setLoading(false);
+      router.push("/");
       return;
     }
     if (!address) {
-      setChecking(false);
-      setLoading(false);
+      router.push("/");
       return;
     }
     (async () => {
       const admin = await isAdminWallet(address);
       setIsAdmin(admin);
-      setChecking(false);
       if (!admin) {
         setLoading(false);
         return;
       }
       await fetchDoctors();
     })();
-  }, [address, isConnected]);
+  }, [address, isConnected, router]);
 
   const fetchDoctors = async () => {
     try {
@@ -92,7 +90,11 @@ export default function AdminDoctors() {
     fetchDoctors();
   };
 
-  if (checking || loading) {
+  if (!isConnected || !address) {
+    return null; // redirecting
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-gray-600 dark:text-gray-300">Loading...</div>
@@ -100,26 +102,6 @@ export default function AdminDoctors() {
     );
   }
 
-  if (!isConnected) {
-    return (
-      <div className="p-4 sm:p-8 text-center">
-        <p className="text-gray-700 dark:text-gray-300">Please connect your wallet.</p>
-        <Link href="/" className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          🏠 Go Home
-        </Link>
-      </div>
-    );
-  }
-  if (!address) {
-    return (
-      <div className="p-4 sm:p-8 text-center">
-        <p className="text-gray-700 dark:text-gray-300">No wallet address detected.</p>
-        <Link href="/" className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          🏠 Go Home
-        </Link>
-      </div>
-    );
-  }
   if (!isAdmin) {
     return (
       <div className="p-4 sm:p-8 text-center">
