@@ -3,63 +3,41 @@
 @tailwind utilities;
 
 /* ============================================
-   THEME VARIABLES (4 Premium Themes)
+   2 PREMIUM MEDICAL THEMES
    ============================================ */
+
+/* 1. Serene Clinical Blue (default) */
 :root {
-  --theme-bg: #0a1628;
-  --theme-bg-secondary: #1a2a4a;
-  --theme-text: #e2e8f0;
-  --theme-text-secondary: #94a3b8;
-  --theme-accent: #fbbf24;
-  --theme-accent-hover: #f59e0b;
-  --theme-border: #2a3a5a;
-  --theme-card: #1a2a4a80;
-  --theme-input-bg: #2a3a5a;
-  --theme-input-text: #e2e8f0;
-}
-
-[data-theme="rosegold"] {
-  --theme-bg: #1f0f14;
-  --theme-bg-secondary: #3d1a2b;
-  --theme-text: #fce4ec;
-  --theme-text-secondary: #e8b4c4;
-  --theme-accent: #f472b6;
-  --theme-accent-hover: #ec4899;
-  --theme-border: #5a2a3a;
-  --theme-card: #3d1a2b80;
-  --theme-input-bg: #5a2a3a;
-  --theme-input-text: #fce4ec;
-}
-
-[data-theme="charcoal"] {
-  --theme-bg: #111827;
-  --theme-bg-secondary: #1f2937;
-  --theme-text: #f1f5f9;
-  --theme-text-secondary: #9ca3af;
-  --theme-accent: #60a5fa;
-  --theme-accent-hover: #3b82f6;
-  --theme-border: #374151;
-  --theme-card: #1f293780;
-  --theme-input-bg: #374151;
-  --theme-input-text: #f1f5f9;
-}
-
-[data-theme="classic"] {
   --theme-bg: #f8fafc;
   --theme-bg-secondary: #ffffff;
-  --theme-text: #0f172a;
+  --theme-text: #1f2937;
   --theme-text-secondary: #475569;
-  --theme-accent: #2563eb;
-  --theme-accent-hover: #1d4ed8;
+  --theme-accent: #1e88e5;
+  --theme-accent-hover: #1565c0;
   --theme-border: #e2e8f0;
   --theme-card: #ffffff80;
   --theme-input-bg: #f1f5f9;
-  --theme-input-text: #0f172a;
+  --theme-input-text: #1f2937;
+  --theme-success: #66bb6a;
+  --theme-danger: #ef4444;
 }
 
-/* ============================================
-   GLOBAL THEME CLASSES
-   ============================================ */
+[data-theme="healing"] {
+  --theme-bg: #f0fdf4;
+  --theme-bg-secondary: #ffffff;
+  --theme-text: #1f2937;
+  --theme-text-secondary: #475569;
+  --theme-accent: #10b981;
+  --theme-accent-hover: #059669;
+  --theme-border: #d1fae5;
+  --theme-card: #ffffff80;
+  --theme-input-bg: #ecfdf5;
+  --theme-input-text: #1f2937;
+  --theme-success: #34d399;
+  --theme-danger: #ef4444;
+}
+
+/* Global theme classes */
 .theme-bg { background: var(--theme-bg); }
 .theme-bg-secondary { background: var(--theme-bg-secondary); }
 .theme-text { color: var(--theme-text); }
@@ -71,9 +49,11 @@
 .theme-card { background: var(--theme-card); backdrop-filter: blur(8px); }
 .theme-input { background: var(--theme-input-bg); color: var(--theme-input-text); }
 .theme-input:focus { outline: 2px solid var(--theme-accent); outline-offset: 2px; }
+.theme-success { color: var(--theme-success); }
+.theme-danger { color: var(--theme-danger); }
 
 /* ============================================
-   EXISTING STYLES (keep unchanged)
+   BASE STYLES
    ============================================ */
 @layer base {
   body {
@@ -84,24 +64,24 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all hover:shadow-lg hover:scale-105 active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600;
+    @apply theme-accent-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition-all hover:shadow-lg hover:scale-105 active:scale-95;
   }
   .btn-secondary {
-    @apply bg-secondary-600 text-white px-6 py-2 rounded-lg hover:bg-secondary-700 transition-all hover:shadow-lg hover:scale-105 active:scale-95 dark:bg-secondary-500 dark:hover:bg-secondary-600;
+    @apply bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all hover:shadow-lg hover:scale-105 active:scale-95;
   }
   .btn-accent {
-    @apply bg-accent-500 text-white px-6 py-2 rounded-lg hover:bg-accent-600 transition-all hover:shadow-lg hover:scale-105 active:scale-95 dark:bg-accent-400 dark:hover:bg-accent-500;
+    @apply bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all hover:shadow-lg hover:scale-105 active:scale-95;
   }
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700;
+    @apply theme-bg-secondary theme-border border rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 p-6;
   }
   .card-hover {
     @apply hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300;
   }
   .section-title {
-    @apply text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4;
+    @apply text-2xl font-bold theme-text mb-4;
   }
   .section-subtitle {
-    @apply text-sm text-gray-500 dark:text-gray-400;
+    @apply text-sm theme-text-secondary;
   }
 }
