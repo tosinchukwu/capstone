@@ -3,46 +3,63 @@
 @tailwind utilities;
 
 /* ============================================
-   ADMIN THEME VARIABLES (applies to admin panel)
+   PREMIUM THEMES
    ============================================ */
+
+/* 1. Midnight Oasis (default) */
 :root {
-  /* Navy Gold (default) */
-  --admin-bg: #0f172a;
-  --admin-bg-secondary: #1e293b;
-  --admin-text: #f1f5f9;
+  --admin-bg: #0a1628;
+  --admin-bg-secondary: #1a2a4a;
+  --admin-text: #e2e8f0;
   --admin-text-secondary: #94a3b8;
   --admin-accent: #fbbf24;
   --admin-accent-hover: #f59e0b;
-  --admin-border: #334155;
-  --admin-card: #1e293b80;
-  --admin-input-bg: #334155;
+  --admin-border: #2a3a5a;
+  --admin-card: #1a2a4a80;
+  --admin-input-bg: #2a3a5a;
+  --admin-input-text: #e2e8f0;
+}
+
+/* 2. Rose Gold */
+[data-theme="rosegold"] {
+  --admin-bg: #1f0f14;
+  --admin-bg-secondary: #3d1a2b;
+  --admin-text: #fce4ec;
+  --admin-text-secondary: #e8b4c4;
+  --admin-accent: #f472b6;
+  --admin-accent-hover: #ec4899;
+  --admin-border: #5a2a3a;
+  --admin-card: #3d1a2b80;
+  --admin-input-bg: #5a2a3a;
+  --admin-input-text: #fce4ec;
+}
+
+/* 3. Charcoal Steel */
+[data-theme="charcoal"] {
+  --admin-bg: #111827;
+  --admin-bg-secondary: #1f2937;
+  --admin-text: #f1f5f9;
+  --admin-text-secondary: #9ca3af;
+  --admin-accent: #60a5fa;
+  --admin-accent-hover: #3b82f6;
+  --admin-border: #374151;
+  --admin-card: #1f293780;
+  --admin-input-bg: #374151;
   --admin-input-text: #f1f5f9;
 }
 
-[data-theme="teal"] {
-  --admin-bg: #0f3b3a;
-  --admin-bg-secondary: #1a5c5a;
-  --admin-text: #e2f0f0;
-  --admin-text-secondary: #a0c4c4;
-  --admin-accent: #2dd4bf;
-  --admin-accent-hover: #14b8a6;
-  --admin-border: #2d6b6a;
-  --admin-card: #1a5c5a80;
-  --admin-input-bg: #2d6b6a;
-  --admin-input-text: #e2f0f0;
-}
-
-[data-theme="neon"] {
-  --admin-bg: #1a0b2e;
-  --admin-bg-secondary: #2d1b4e;
-  --admin-text: #f0e6ff;
-  --admin-text-secondary: #b8a5d6;
-  --admin-accent: #f472b6;
-  --admin-accent-hover: #ec4899;
-  --admin-border: #4a2b6b;
-  --admin-card: #2d1b4e80;
-  --admin-input-bg: #4a2b6b;
-  --admin-input-text: #f0e6ff;
+/* 4. Classic Light */
+[data-theme="classic"] {
+  --admin-bg: #f8fafc;
+  --admin-bg-secondary: #ffffff;
+  --admin-text: #0f172a;
+  --admin-text-secondary: #475569;
+  --admin-accent: #2563eb;
+  --admin-accent-hover: #1d4ed8;
+  --admin-border: #e2e8f0;
+  --admin-card: #ffffff80;
+  --admin-input-bg: #f1f5f9;
+  --admin-input-text: #0f172a;
 }
 
 /* Admin utility classes */
