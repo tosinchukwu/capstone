@@ -16,7 +16,7 @@ export function useCreateAppointment() {
     });
   };
 
-  return { create, isPending, error, data }; // ✅ data contains transaction hash
+  return { create, isPending, error, data };
 }
 
 export function useConfirmAppointment() {
