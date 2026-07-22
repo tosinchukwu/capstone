@@ -26,7 +26,7 @@ export default function AppointmentCard({
 }: AppointmentCardProps) {
   const { address } = useAccount();
 
-  // ✅ Improved date formatter – shows "Not set" instead of "Invalid date"
+  // ✅ Updated formatter – shows "Not set" instead of "Invalid date"
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Not set";
     const d = new Date(dateStr);
