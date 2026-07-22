@@ -6,8 +6,8 @@ export default function Logo() {
             <Image
                 src="/logo.png"
                 alt="MEDCRUSH Logo"
-                width={40}
-                height={40}
+                width={60}
+                height={60}
                 className="object-contain h-8 sm:h-10 w-auto"
                 priority
             />
