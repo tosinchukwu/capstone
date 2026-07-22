@@ -20,7 +20,7 @@ export default function Greeting() {
   const displayName = ensName || `${address.slice(0, 6)}...${address.slice(-4)}`;
 
   return (
-    <p className="text-lg font-medium theme-text">
+    <p className="text-lg font-medium text-slate-900 dark:text-slate-100">
       {getGreeting()}, {displayName} 👋
     </p>
   );
