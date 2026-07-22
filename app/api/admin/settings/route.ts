@@ -20,7 +20,6 @@ export async function GET() {
     return NextResponse.json(settings);
   } catch (error) {
     console.error("Error fetching hospital settings:", error);
-    // Fallback – return a default object so the frontend never breaks
     return NextResponse.json({
       name: "MEDCRUSH BLOCKCHAIN HOSPITAL",
       email: "medcrush@gmail.com",
