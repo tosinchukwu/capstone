@@ -11,14 +11,14 @@ export default function ConnectWallet() {
   };
 
   if (!ready) {
-    return <div className="animate-pulse text-gray-400 dark:text-gray-500 text-xs sm:text-sm">Loading...</div>;
+    return <div className="animate-pulse text-gray-400 dark:text-gray-500 text-xs">Loading...</div>;
   }
 
   return (
     <button
       onClick={authenticated ? handleLogout : login}
       className={`
-        px-3 py-1.5 rounded-lg text-sm font-medium 
+        px-3 py-1 rounded-lg text-xs font-medium 
         transition-all hover:shadow-md hover:scale-105 active:scale-95 
         whitespace-nowrap
         ${
@@ -28,7 +28,7 @@ export default function ConnectWallet() {
         }
       `}
     >
-      {authenticated ? "Disconnect" : "Connect Wallet"}
+      {authenticated ? "Disconnect" : "Connect"}
     </button>
   );
 }
