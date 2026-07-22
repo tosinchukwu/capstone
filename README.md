@@ -1,7 +1,7 @@
 markdown
-# 🏥 Health Consultation Booking App
+# 🏥 MEDCRUSH Blockchain Hospital – Health Consultation Booking App
 
-A decentralized health consultation booking platform that stores **sensitive data off‑chain** (in a PostgreSQL database) while using a lightweight Ethereum smart contract for appointment confirmation and completion status.
+A decentralized health consultation booking platform that stores **sensitive data off‑chain** (in a PostgreSQL database) while using a lightweight Ethereum smart contract for appointment confirmation and completion.
 
 > **Privacy‑first**: Patient names, symptoms, and descriptions **never** touch the blockchain – only appointment IDs and statuses are on‑chain.
 
@@ -18,6 +18,8 @@ A decentralized health consultation booking platform that stores **sensitive dat
 - [Smart Contract (Foundry)](#smart-contract-foundry)
 - [Database (PostgreSQL)](#database-postgresql)
 - [Authentication with Privy](#authentication-with-privy)
+- [Admin Dashboard](#admin-dashboard)
+- [Hospital Settings & Branding](#hospital-settings--branding)
 - [Environment Variables](#environment-variables)
 - [Running Locally](#running-locally)
 - [Deployment to Vercel](#deployment-to-vercel)
@@ -53,25 +55,46 @@ This application allows patients to book consultations with doctors.
 
 ## ✨ Features
 
+### User Features
+
 - **Doctor Registration & Profile** – doctors sign up and edit their profile (specialty, hospital, bio, etc.).
 - **Availability Slots** – doctors create time slots that patients can book.
 - **Patient Booking** – patients select a doctor and an available slot, then book an appointment.
 - **On‑Chain Status** – appointment status (Pending, Confirmed, Completed) is stored on‑chain.
 - **Off‑Chain Data** – patient name, description, and other sensitive info are stored in PostgreSQL.
 - **Doctor Dashboard** – doctors view appointments, confirm/reject, and manage slots.
+- **Patient Dashboard** – patients view their appointments and status.
+- **Role Selector** – users choose "Patient" or "Doctor" role on landing.
 - **Responsive UI** – works on both desktop and mobile (Tailwind CSS).
 - **Dark / Light Theme** – toggle between themes.
 - **Privy Authentication** – email, social, or wallet login.
 - **Smart Contract** – deployed on Sepolia testnet, verified on Sourcify.
 - **Real‑Time Updates** – appointments refresh after status changes.
 - **Health Tips** – daily health tips displayed on the homepage.
+- **Delete Appointments** – doctors can delete appointments (with confirmation).
+- **Clear All** – doctors can clear all appointments (with confirmation).
+
+### Admin Features
+
+- **Secure Admin Panel** – protected by wallet whitelist (multi‑admin support).
+- **Doctor Management** – add, edit, delete, toggle active/inactive.
+- **Hospital Settings** – manage hospital name, email, phone, address, social links.
+- **Admin Wallet Whitelist** – add/remove admin wallets via the settings page.
+- **Statistics Dashboard** – view total appointments, pending, confirmed, completed, cancelled counts.
+- **User Overview** – view total doctors and patients.
+
+### Branding
+
+- **Custom Logo** – floating sticky logo in the navbar (60×60 source, responsive).
+- **Hospital Info** – displayed in the homepage footer (name, address, phone, email).
+- **Favicon** – browser tab icon with "MEDCRUSH" branding.
 
 ---
 
 ## 🧩 Repository Structure & Team Ownership
 
 ```text
-tcc7-t9-hcbookingapp/
+medcrush-blockchain-hospital/
 ├── abis/
 │   └── HealthConsultationBooking.json
 ├── contracts/
@@ -82,31 +105,57 @@ tcc7-t9-hcbookingapp/
 │   └── foundry.toml
 ├── app/
 │   ├── api/
+│   │   ├── admin/
+│   │   │   ├── doctors/route.ts
+│   │   │   ├── settings/route.ts
+│   │   │   └── stats/route.ts
+│   │   └── appointments/
+│   │       ├── [id]/route.ts
+│   │       └── route.ts
+│   ├── admin/
+│   │   ├── doctors/page.tsx
+│   │   ├── settings/page.tsx
+│   │   └── page.tsx
 │   ├── appointments/
+│   │   ├── [id]/page.tsx
+│   │   └── create/page.tsx
 │   ├── dashboard/
+│   │   ├── profile/page.tsx
+│   │   └── page.tsx
 │   ├── tips/
+│   │   └── page.tsx
 │   ├── layout.tsx
-│   └── page.tsx
+│   ├── page.tsx
+│   └── providers.tsx
 ├── components/
+│   ├── AdminLayout.tsx
+│   ├── AppointmentCard.tsx
+│   ├── AppointmentDetail.tsx
+│   ├── AppointmentForm.tsx
+│   ├── AppointmentList.tsx
+│   ├── ConnectWallet.tsx
+│   ├── HealthTips.tsx
+│   ├── HospitalInfo.tsx
+│   ├── Logo.tsx
+│   └── ThemeToggle.tsx
 ├── hooks/
+│   └── useAppointments.ts
 ├── lib/
-│   ├── constants.ts
+│   ├── admin.ts
 │   ├── contract.ts
+│   ├── format.ts
 │   └── prisma.ts
 ├── prisma/
 │   └── schema.prisma
 ├── public/
+│   ├── favicon.ico
+│   └── logo.png
 ├── types/
 ├── .env.local.example
 ├── next.config.js
 ├── package.json
 ├── tailwind.config.js
 └── README.md
-Member	Responsibilities
-👨‍💻 Member 1	Smart contract, tests, deployment, ABI export
-🎨 Member 2	UI/UX, pages, components, Tailwind CSS
-🔗 Member 3	Web3 integration, Privy setup, custom hooks, API calls
-🧠 Member 4	Prisma, PostgreSQL, CI/CD, environment, deployment
 🛠 Tech Stack
 Layer	Technology
 Blockchain	Solidity, Foundry (Sepolia testnet)
@@ -115,6 +164,7 @@ Authentication	Privy (email, social, wallet)
 Web3	Wagmi v2, Viem, @privy-io/wagmi
 Database	PostgreSQL (Neon) with Prisma ORM
 Hosting	Vercel (auto‑deploy from GitHub)
+Admin	Custom admin dashboard with role‑based access (wallet whitelist)
 📦 Prerequisites
 Node.js v18+ and npm
 
@@ -196,13 +246,11 @@ User	Stores wallet, name, role (PATIENT / DOCTOR), and doctor‑specific fields
 Appointment	Links to patient/doctor, stores off‑chain details, and references the on‑chain ID
 Availability	Time slots created by doctors
 Tip	Health tips displayed on the homepage
+HospitalSettings	Hospital contact, social media, and admin wallet whitelist
 Recommended Providers
 Neon (best for Vercel) – IPv4 supported, 0.5 GB free storage, connection pooling.
 
 Railway – if you use Railway for hosting, it provides a managed PostgreSQL.
-
-Seed Data
-Insert doctors and tips via Neon SQL Editor or using prisma db seed.
 
 🔐 Authentication with Privy
 We use Privy to handle authentication (email, social, or wallet login). This replaces WalletConnect and provides a smooth onboarding experience.
@@ -224,14 +272,52 @@ Copy your App ID and set NEXT_PUBLIC_PRIVY_APP_ID.
 In Domains settings, add your Vercel domain (https://your-app.vercel.app).
 
 Provider Setup
-The app/providers.tsx file sets up Privy with Wagmi:
+The app/providers.tsx file sets up Privy with Wagmi.
 
-tsx
-<PrivyProvider appId={privyAppId} config={{ ... }}>
-  <WagmiProvider config={wagmiConfig}>
-    {children}
-  </WagmiProvider>
-</PrivyProvider>
+🛡️ Admin Dashboard
+The admin dashboard provides a secure interface for managing the platform.
+
+Access Control
+Multi‑admin wallet whitelist – stored in HospitalSettings.adminWallets.
+
+The environment variable NEXT_PUBLIC_ADMIN_WALLET is used as a fallback if no admin wallets are set.
+
+Admin wallets can be added/removed via the admin settings page.
+
+Features
+Feature	Description
+Dashboard	View appointment statistics (total, pending, confirmed, completed, cancelled, doctors, patients)
+Doctor Management	Add, edit, delete, and toggle doctors active/inactive
+Hospital Settings	Update hospital name, email, phone, address, website, and social media links (Twitter, LinkedIn, Facebook, Instagram)
+Admin Wallet Management	Add/remove wallet addresses that have admin access
+Admin API Routes
+Endpoint	Method	Description
+/api/admin/doctors	GET	List all doctors
+/api/admin/doctors	POST	Add a new doctor
+/api/admin/doctors	PUT	Update a doctor
+/api/admin/doctors	DELETE	Delete a doctor
+/api/admin/settings	GET	Get hospital settings
+/api/admin/settings	PUT	Update hospital settings
+/api/admin/stats	GET	Get appointment statistics
+🏥 Hospital Settings & Branding
+Hospital Info
+Name: MEDCRUSH BLOCKCHAIN HOSPITAL
+
+Email: medcrush@gmail.com
+
+Phone: 08023000000
+
+Address: 2, Hospital Road, Benin
+
+This information is displayed in the homepage footer and can be updated via the admin settings page.
+
+Logo & Favicon
+Logo: public/logo.png (60×60 source, displayed at 32–40px height, responsive)
+
+Favicon: public/favicon.ico (browser tab icon)
+
+The logo is a floating/sticky element at the top‑left corner, independent of the navbar panel (so the navbar stays compact).
+
 🌐 Environment Variables
 Create a .env.local file with the following variables:
 
@@ -250,6 +336,12 @@ NEXT_PUBLIC_CHAIN_ID=11155111
 
 # Privy App ID – from Privy Console → App Settings → Basics
 NEXT_PUBLIC_PRIVY_APP_ID="clm7..."
+
+# WalletConnect Project ID (optional – only if using WalletConnect)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=""
+
+# Admin Wallet – initial admin wallet (fallback)
+NEXT_PUBLIC_ADMIN_WALLET="0xYourAdminWalletAddress"
 Note: NEXT_PUBLIC_RPC_URL is set to a reliable public endpoint.
 If you prefer a dedicated provider, you can use Infura/Alchemy with an API key.
 
@@ -274,13 +366,10 @@ Deploy – Vercel will automatically run the build.
 🧪 Troubleshooting
 Wallet Pop‑Up Not Appearing
 If using Privy embedded wallet (email login):
-
 Open the Privy modal (click your profile icon) and confirm the pending transaction there.
 
 If using an external wallet (Rabby, MetaMask):
-
 Open the wallet extension and check the "Activity" tab for a pending transaction.
-
 Ensure your wallet is on Sepolia and you have test ETH for gas.
 
 Pop‑ups blocked: Allow pop‑ups for your site in browser settings.
@@ -318,6 +407,11 @@ If you see Do not know how to serialize a BigInt, the API responses have been fi
 
 Ensure app/api/appointments/route.ts uses the serializeBigInt helper.
 
+Admin Dashboard Access
+Ensure NEXT_PUBLIC_ADMIN_WALLET is set to your wallet address (or add your wallet via the admin settings).
+
+Connect with the same wallet to access /admin.
+
 🤝 Contributing
 This project is developed by a team of 4. Please follow the standard Git flow:
 
@@ -341,17 +435,38 @@ text
 
 ---
 
-### 📌 What This README Includes
+## 📌 `.env.local.example` (Full)
 
-| Section | Content |
-|---------|---------|
-| **Features** | Complete list of all app features |
-| **Team Ownership** | Clean table with responsibilities |
-| **Tech Stack** | Clear breakdown by layer |
-| **Smart Contract** | Functions, events, test & deploy commands |
-| **Environment Variables** | Working RPC (`tenderly.co`) and all required vars |
-| **Troubleshooting** | Wallet pop‑up, RPC, DB, profile, slots, BigInt fixes |
-| **Privy Setup** | Configuration and provider setup |
-| **Deployment** | Vercel steps with build script |
+```env
+# ============================================
+# DATABASE (PostgreSQL – Neon)
+# ============================================
+# Use the pooled connection string from Neon
+DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@ep-...-pooler.aws.neon.tech/neondb?sslmode=require"
 
+# ============================================
+# SMART CONTRACT (Sepolia testnet)
+# ============================================
+# Deployed contract address – get this after running forge script
+NEXT_PUBLIC_CONTRACT_ADDRESS="0x9269C8E4BcE3ac4a1A4cfF37697f54A6342bda95"
 
+# RPC URL – working public endpoint (Tenderly)
+NEXT_PUBLIC_RPC_URL="https://sepolia.gateway.tenderly.co"
+
+# Chain ID for Sepolia
+NEXT_PUBLIC_CHAIN_ID=11155111
+
+# ============================================
+# AUTHENTICATION (Privy)
+# ============================================
+# Get this from https://console.privy.io → App Settings → Basics
+NEXT_PUBLIC_PRIVY_APP_ID="clm7..."
+
+# WalletConnect Project ID (optional – only if using WalletConnect)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=""
+
+# ============================================
+# ADMIN DASHBOARD
+# ============================================
+# Initial admin wallet (fallback) – you can add more via the admin settings
+NEXT_PUBLIC_ADMIN_WALLET="0xYourAdminWalletAddress"
