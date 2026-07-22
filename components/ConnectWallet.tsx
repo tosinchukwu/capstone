@@ -1,12 +1,20 @@
 "use client";
 import { usePrivy } from "@privy-io/react-auth";
+import { useAccount, useEnsName } from "wagmi";
 
 export default function ConnectWallet() {
   const { ready, authenticated, login, logout } = usePrivy();
+  const { address } = useAccount();
+  const { data: ensName } = useEnsName({ address });
 
   if (!ready) {
     return <div className="animate-pulse text-gray-400 dark:text-gray-500 text-xs sm:text-sm">Loading...</div>;
   }
+
+  // Show display name
+  const displayName = authenticated && address
+    ? (ensName || `${address.slice(0, 6)}...${address.slice(-4)}`)
+    : null;
 
   return (
     <button
@@ -18,11 +26,11 @@ export default function ConnectWallet() {
         ${
           authenticated
             ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800 hover:bg-red-200 dark:hover:bg-red-900/50"
-            : "bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
+            : "theme-accent-bg text-white"
         }
       `}
     >
-      {authenticated ? "Disconnect" : "Connect"}
+      {authenticated ? `Disconnect ${displayName ? `(${displayName})` : ""}` : "Connect"}
     </button>
   );
 }
