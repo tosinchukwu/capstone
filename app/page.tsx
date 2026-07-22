@@ -5,6 +5,7 @@ import AppointmentList from "@/components/AppointmentList";
 import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import ThemeSettings from "@/components/ThemeSettings";
+import Greeting from "@/components/Greeting";   // ✅ new
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import HospitalInfo from "@/components/HospitalInfo";
@@ -73,10 +74,9 @@ export default function Home() {
     );
   }
 
-  // Main layout
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b theme-border">
         <div className="relative max-w-6xl mx-auto">
           <div className="absolute left-0 top-0 h-full flex items-center">
             <div className="ml-2 sm:ml-4">
@@ -116,24 +116,25 @@ export default function Home() {
       <main className="max-w-6xl mx-auto p-3 sm:p-4 mt-4 sm:mt-8">
         {!isConnected ? (
           <div className="text-center py-12 sm:py-20">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-200 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold theme-text mb-4">
               Welcome to MEDCRUSH Blockchain Hospital
             </h2>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-6 sm:mb-8">
+            <p className="text-sm sm:text-base theme-text-secondary mb-6 sm:mb-8">
               Connect your wallet to continue
             </p>
             <ConnectWallet />
           </div>
         ) : (
           <div>
+            <Greeting />   {/* ✅ added */}
             {role === "patient" && (
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
+                    <h2 className="text-xl sm:text-2xl font-bold theme-text">
                       Your Appointments
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm theme-text-secondary">
                       Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
                     </p>
                   </div>
@@ -152,10 +153,10 @@ export default function Home() {
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
+                    <h2 className="text-xl sm:text-2xl font-bold theme-text">
                       Doctor Dashboard
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm theme-text-secondary">
                       Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
                     </p>
                   </div>
@@ -173,14 +174,14 @@ export default function Home() {
         )}
 
         <div className="mt-8 sm:mt-12">
-          <h2 className="section-title text-xl sm:text-2xl">💡 Daily Health Tips</h2>
+          <h2 className="section-title">💡 Daily Health Tips</h2>
           <HealthTips />
         </div>
       </main>
 
-      <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4 mt-8">
+      <footer className="max-w-6xl mx-auto px-4 pb-6 text-center text-xs text-gray-400 border-t theme-border pt-4 mt-8">
         <div className="flex flex-col items-center gap-2">
-          <Link href="/admin" className="hover:text-gold-500 transition-colors">
+          <Link href="/admin" className="hover:theme-accent transition-colors">
             Admin Panel
           </Link>
           <HospitalInfo />
