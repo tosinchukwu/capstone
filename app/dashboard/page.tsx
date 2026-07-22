@@ -130,10 +130,12 @@ export default function DashboardPage() {
         const chainId = BigInt(app.chainAppointmentId);
         setPendingUpdate({ id, status });
         confirmAppointment([chainId]);
+        alert("⏳ Confirm transaction sent. Waiting for confirmation...");
       } else if (status === "COMPLETED") {
         const chainId = BigInt(app.chainAppointmentId);
         setPendingUpdate({ id, status });
         completeAppointment([chainId]);
+        alert("⏳ Complete transaction sent. Waiting for confirmation...");
       } else if (status === "CANCELLED") {
         const updateRes = await fetch(`/api/appointments/${id}`, {
           method: "PUT",
@@ -142,7 +144,7 @@ export default function DashboardPage() {
         });
         if (!updateRes.ok) throw new Error("Failed to update database");
         setRefreshKey((prev) => prev + 1);
-        alert("Appointment rejected.");
+        alert("✅ Appointment rejected.");
       }
     } catch (error) {
       console.error("❌ Error:", error);
@@ -166,18 +168,18 @@ export default function DashboardPage() {
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update DB");
           setRefreshKey((prev) => prev + 1);
-          alert(`Appointment ${status.toLowerCase()} successfully!`);
+          alert(`✅ Appointment ${status.toLowerCase()} successfully!`);
           setPendingUpdate(null);
         })
         .catch((err) => {
           console.error("DB update error:", err);
-          alert("Transaction confirmed but failed to update database.");
+          alert("❌ Transaction confirmed but failed to update database.");
           setPendingUpdate(null);
         });
     }
     if (isError) {
       setPendingUpdate(null);
-      alert("Transaction failed. Please try again.");
+      alert("❌ Transaction failed. Please try again.");
     }
   }, [isSuccess, isError, pendingUpdate]);
 
