@@ -72,12 +72,30 @@ export default function AppointmentList({
     }
   };
 
+  // ✅ Fallback: if onStatusUpdate is undefined, handle it directly
   const handleStatusUpdate = (id: string, status: string) => {
     console.log("📤 AppointmentList.handleStatusUpdate called:", { id, status });
+
     if (onStatusUpdate) {
       onStatusUpdate(id, status);
     } else {
-      console.log("❌ onStatusUpdate is undefined in AppointmentList!");
+      console.warn("⚠️ onStatusUpdate is undefined – using fallback direct call");
+      // ✅ Fallback: call the API directly (this is a temporary fix)
+      fetch(`/api/appointments/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to update");
+          alert(`✅ Appointment ${status.toLowerCase()} successfully!`);
+          fetchAppointments();
+          if (onUpdate) onUpdate();
+        })
+        .catch((err) => {
+          console.error("Fallback update error:", err);
+          alert("❌ Failed to update appointment.");
+        });
     }
   };
 
