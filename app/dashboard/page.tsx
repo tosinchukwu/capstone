@@ -121,19 +121,16 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ Updated with debug logging
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       console.log("📡 updateAppointmentStatus called with:", { id, status });
 
-      // 1. Fetch the appointment to get chainAppointmentId
       const res = await fetch(`/api/appointments/${id}`);
       if (!res.ok) throw new Error("Appointment not found");
       const app = await res.json();
 
       console.log("📋 Appointment data from API:", app);
 
-      // 2. Validate chainAppointmentId
       const chainId = Number(app.chainAppointmentId);
       console.log("🔗 chainAppointmentId:", chainId);
 
@@ -142,7 +139,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // 3. For CONFIRMED or COMPLETED – call the contract
       if (status === "CONFIRMED") {
         console.log("⛓️ Calling confirmAppointment with chainId:", chainId);
         confirmAppointment([BigInt(chainId)]);
@@ -242,9 +238,11 @@ export default function DashboardPage() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Appointments</h2>
+        {/* ✅ Pass both onStatusUpdate and isPending */}
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
+          onUpdate={handleRefreshAppointments}
           onStatusUpdate={updateAppointmentStatus}
           isPending={isContractPending}
         />
