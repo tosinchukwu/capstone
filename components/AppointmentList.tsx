@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import AppointmentCard from "./AppointmentCard";
+import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
 
 type Appointment = {
   id: string;
@@ -18,7 +19,6 @@ interface AppointmentListProps {
   doctorId?: string;
   refresh?: number;
   onUpdate?: () => void;
-  onStatusUpdate?: (id: string, status: string) => void;
   isPending?: boolean;
 }
 
@@ -28,11 +28,14 @@ export default function AppointmentList({
   doctorId,
   refresh,
   onUpdate,
-  onStatusUpdate,
   isPending,
 }: AppointmentListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Use contract hooks directly (same as detail page)
+  const { confirm: confirmAppointment } = useConfirmAppointment();
+  const { complete: completeAppointment } = useCompleteAppointment();
 
   const fetchAppointments = () => {
     setLoading(true);
@@ -72,31 +75,54 @@ export default function AppointmentList({
     }
   };
 
-  // ✅ Fallback: if onStatusUpdate is undefined, handle it directly
+  // ✅ Call contract directly (same as handleConfirm/handleComplete on detail page)
   const handleStatusUpdate = (id: string, status: string) => {
     console.log("📤 AppointmentList.handleStatusUpdate called:", { id, status });
 
-    if (onStatusUpdate) {
-      onStatusUpdate(id, status);
-    } else {
-      console.warn("⚠️ onStatusUpdate is undefined – using fallback direct call");
-      // ✅ Fallback: call the API directly (this is a temporary fix)
-      fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status }),
-        headers: { "Content-Type": "application/json" },
+    // Fetch appointment data to get chainAppointmentId
+    fetch(`/api/appointments/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Appointment not found");
+        return res.json();
       })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to update");
-          alert(`✅ Appointment ${status.toLowerCase()} successfully!`);
-          fetchAppointments();
-          if (onUpdate) onUpdate();
-        })
-        .catch((err) => {
-          console.error("Fallback update error:", err);
-          alert("❌ Failed to update appointment.");
-        });
-    }
+      .then((app) => {
+        const chainId = Number(app.chainAppointmentId);
+        if (!chainId || chainId === 0) {
+          alert("❌ Invalid appointment ID. Please refresh and try again.");
+          return;
+        }
+
+        if (status === "CONFIRMED") {
+          console.log("⛓️ Calling confirmAppointment with chainId:", chainId);
+          confirmAppointment([BigInt(chainId)]);
+          alert("⏳ Confirm transaction sent. Please approve in your wallet.");
+        } else if (status === "COMPLETED") {
+          console.log("⛓️ Calling completeAppointment with chainId:", chainId);
+          completeAppointment([BigInt(chainId)]);
+          alert("⏳ Complete transaction sent. Please approve in your wallet.");
+        } else if (status === "CANCELLED") {
+          // Reject only updates the database, no contract call
+          fetch(`/api/appointments/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({ status }),
+            headers: { "Content-Type": "application/json" },
+          })
+            .then((res) => {
+              if (!res.ok) throw new Error("Failed to update database");
+              alert("✅ Appointment rejected.");
+              fetchAppointments();
+              if (onUpdate) onUpdate();
+            })
+            .catch((err) => {
+              console.error("Error rejecting appointment:", err);
+              alert("❌ Failed to reject appointment.");
+            });
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching appointment:", err);
+        alert("❌ Failed to process appointment.");
+      });
   };
 
   if (loading) {
