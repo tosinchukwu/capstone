@@ -121,6 +121,11 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ Refresh appointments by incrementing refreshKey
+  const handleRefreshAppointments = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       console.log("📡 updateAppointmentStatus called with:", { id, status });
@@ -229,7 +234,7 @@ export default function DashboardPage() {
           Edit Profile →
         </Link>
         <button
-          onClick={() => setRefreshKey((prev) => prev + 1)}
+          onClick={handleRefreshAppointments}
           className="ml-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
         >
           Refresh Appointments
@@ -238,7 +243,6 @@ export default function DashboardPage() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Appointments</h2>
-        {/* ✅ Pass both onStatusUpdate and isPending */}
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
