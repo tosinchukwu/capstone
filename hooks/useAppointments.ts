@@ -36,18 +36,27 @@ export function useConfirmAppointment() {
   return { confirm, isPending, error, data };
 }
 
+// ✅ FIXED: CompleteAppointment with proper logging
 export function useCompleteAppointment() {
   const { writeContract, isPending, error, data } = useWriteContract();
 
   const complete = (args: any[]) => {
     console.log("⛓️ complete() called with args:", args);
     console.log("⛓️ contractConfig:", contractConfig);
-    writeContract({
-      address: contractConfig.address,
-      abi: contractConfig.abi,
-      functionName: "completeAppointment",
-      args,
-    });
+    console.log("⛓️ About to call writeContract for completeAppointment");
+
+    try {
+      writeContract({
+        address: contractConfig.address,
+        abi: contractConfig.abi,
+        functionName: "completeAppointment",
+        args,
+      });
+      console.log("✅ writeContract called successfully");
+    } catch (err) {
+      console.error("❌ writeContract threw an error:", err);
+      throw err;
+    }
   };
   return { complete, isPending, error, data };
 }
