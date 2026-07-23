@@ -125,7 +125,6 @@ export default function DashboardPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  // ✅ This function must be defined
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       console.log("📡 updateAppointmentStatus called with:", { id, status });
@@ -243,7 +242,7 @@ export default function DashboardPage() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Appointments</h2>
-        {/* ✅ Pass onStatusUpdate and isPending */}
+        {/* ✅ This is where the props are passed */}
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
