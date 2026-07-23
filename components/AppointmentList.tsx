@@ -73,8 +73,11 @@ export default function AppointmentList({
   };
 
   const handleStatusUpdate = (id: string, status: string) => {
+    console.log("📤 AppointmentList.handleStatusUpdate called:", { id, status });
     if (onStatusUpdate) {
       onStatusUpdate(id, status);
+    } else {
+      console.log("❌ onStatusUpdate is undefined in AppointmentList!");
     }
   };
 
