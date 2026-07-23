@@ -121,11 +121,11 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ Refresh appointments by incrementing refreshKey
   const handleRefreshAppointments = () => {
     setRefreshKey((prev) => prev + 1);
   };
 
+  // ✅ Updated with debug logs for both confirm and complete
   const updateAppointmentStatus = async (id: string, status: string) => {
     try {
       console.log("📡 updateAppointmentStatus called with:", { id, status });
