@@ -26,7 +26,7 @@ export default function AppointmentCard({
 }: AppointmentCardProps) {
   const { address } = useAccount();
 
-  // ✅ Updated formatter – shows "Not set" instead of "Invalid date"
+  // ✅ Clean formatter – never shows "Invalid date"
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Not set";
     const d = new Date(dateStr);
@@ -45,13 +45,17 @@ export default function AppointmentCard({
   const canComplete = isDoctor && appointment.status === "CONFIRMED";
   const canReject = isDoctor && appointment.status === "PENDING";
 
+  // ✅ Add debug logging
   const handleConfirm = () => {
+    console.log("🔵 Confirm clicked for appointment:", appointment.id);
+    console.log("🔵 chainAppointmentId:", appointment.chainAppointmentId);
     if (onStatusUpdate) {
       onStatusUpdate(appointment.id, "CONFIRMED");
     }
   };
 
   const handleComplete = () => {
+    console.log("🟢 Complete clicked for appointment:", appointment.id);
     if (onStatusUpdate) {
       onStatusUpdate(appointment.id, "COMPLETED");
     }
@@ -59,6 +63,7 @@ export default function AppointmentCard({
 
   const handleReject = () => {
     if (window.confirm("Reject this appointment?")) {
+      console.log("🔴 Reject clicked for appointment:", appointment.id);
       if (onStatusUpdate) onStatusUpdate(appointment.id, "CANCELLED");
     }
   };
