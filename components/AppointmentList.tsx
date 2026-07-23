@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useWaitForTransactionReceipt } from "wagmi";
 import AppointmentCard from "./AppointmentCard";
 import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
 
@@ -19,7 +20,7 @@ interface AppointmentListProps {
   doctorId?: string;
   refresh?: number;
   onUpdate?: () => void;
-  isPending?: boolean;
+  isPending?: boolean; // from parent to disable buttons
 }
 
 export default function AppointmentList({
@@ -32,10 +33,12 @@ export default function AppointmentList({
 }: AppointmentListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
-  // ✅ Contract hooks directly inside
-  const { confirm: confirmAppointment } = useConfirmAppointment();
-  const { complete: completeAppointment } = useCompleteAppointment();
+  const { confirm: confirmAppointment, data: confirmData } = useConfirmAppointment();
+  const { complete: completeAppointment, data: completeData } = useCompleteAppointment();
+
+  const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
   const fetchAppointments = () => {
     setLoading(true);
@@ -63,6 +66,21 @@ export default function AppointmentList({
     fetchAppointments();
   }, [patientId, patientWallet, doctorId, refresh]);
 
+  // When transaction hash appears, start waiting
+  useEffect(() => {
+    if (confirmData) setTxHash(confirmData as `0x${string}`);
+    if (completeData) setTxHash(completeData as `0x${string}`);
+  }, [confirmData, completeData]);
+
+  // When transaction succeeds, refresh list
+  useEffect(() => {
+    if (isSuccess) {
+      fetchAppointments();
+      if (onUpdate) onUpdate();
+      setTxHash(undefined); // reset
+    }
+  }, [isSuccess]);
+
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
@@ -75,9 +93,14 @@ export default function AppointmentList({
     }
   };
 
-  // ✅ Direct contract call logic (same as detail page)
   const handleStatusUpdate = (id: string, status: string) => {
     console.log("📤 AppointmentList.handleStatusUpdate called:", { id, status });
+
+    // Check if already processing a transaction
+    if (isWaiting || txHash) {
+      alert("⏳ A transaction is already in progress. Please wait.");
+      return;
+    }
 
     fetch(`/api/appointments/${id}`)
       .then((res) => {
@@ -123,8 +146,29 @@ export default function AppointmentList({
       });
   };
 
-  if (loading) { /* ... loading UI ... */ }
-  if (appointments.length === 0) { /* ... empty state ... */ }
+  // Combine pending states: parent's isPending OR local waiting for receipt
+  const combinedPending = isPending || isWaiting || !!txHash;
+
+  if (loading) {
+    return (
+      <div className="grid gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="border rounded-lg p-4 animate-pulse bg-gray-100 dark:bg-slate-700 h-24" />
+        ))}
+      </div>
+    );
+  }
+
+  if (appointments.length === 0) {
+    return (
+      <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow">
+        <p className="text-gray-500 dark:text-gray-400">No appointments yet</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+          Click "New Appointment" to book a consultation
+        </p>
+      </div>
+    );
+  }
 
   const grouped = appointments.reduce((acc, app) => {
     const date = app.date ? new Date(app.date).toLocaleDateString() : "Unknown";
@@ -145,7 +189,7 @@ export default function AppointmentList({
                 appointment={app}
                 onDelete={handleDelete}
                 onStatusUpdate={handleStatusUpdate}
-                isPending={isPending}
+                isPending={combinedPending}
               />
             ))}
           </div>
