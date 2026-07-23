@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [doctorId, setDoctorId] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // These hooks are still used for `isContractPending` (passed to AppointmentList)
   const { confirm: confirmAppointment, isPending: confirmPending, data: confirmData } = useConfirmAppointment();
   const { complete: completeAppointment, isPending: completePending, data: completeData } = useCompleteAppointment();
 
@@ -124,14 +125,15 @@ export default function DashboardPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  // No updateAppointmentStatus here – AppointmentList handles it internally
+  // We don't need updateAppointmentStatus here – AppointmentList handles it internally.
+
+  // Combine pending states from the dashboard hooks (for passing to AppointmentList)
+  const isContractPending = confirmPending || completePending || isWaiting;
 
   useEffect(() => {
     if (confirmData) setTxHash(confirmData as `0x${string}`);
     if (completeData) setTxHash(completeData as `0x${string}`);
   }, [confirmData, completeData]);
-
-  const isContractPending = confirmPending || completePending || isWaiting;
 
   if (!isConnected) {
     return (
@@ -172,11 +174,11 @@ export default function DashboardPage() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Appointments</h2>
-        {/* ✅ Only required props – onStatusUpdate and isPending are removed */}
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
           onUpdate={handleRefreshAppointments}
+          isPending={isContractPending}   // ✅ pass combined pending state
         />
       </div>
 
