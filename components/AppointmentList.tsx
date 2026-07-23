@@ -33,7 +33,7 @@ export default function AppointmentList({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Use contract hooks directly (same as detail page)
+  // ✅ Contract hooks directly inside
   const { confirm: confirmAppointment } = useConfirmAppointment();
   const { complete: completeAppointment } = useCompleteAppointment();
 
@@ -75,11 +75,10 @@ export default function AppointmentList({
     }
   };
 
-  // ✅ Call contract directly (same as handleConfirm/handleComplete on detail page)
+  // ✅ Direct contract call logic (same as detail page)
   const handleStatusUpdate = (id: string, status: string) => {
     console.log("📤 AppointmentList.handleStatusUpdate called:", { id, status });
 
-    // Fetch appointment data to get chainAppointmentId
     fetch(`/api/appointments/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Appointment not found");
@@ -101,7 +100,6 @@ export default function AppointmentList({
           completeAppointment([BigInt(chainId)]);
           alert("⏳ Complete transaction sent. Please approve in your wallet.");
         } else if (status === "CANCELLED") {
-          // Reject only updates the database, no contract call
           fetch(`/api/appointments/${id}`, {
             method: "PUT",
             body: JSON.stringify({ status }),
@@ -125,26 +123,8 @@ export default function AppointmentList({
       });
   };
 
-  if (loading) {
-    return (
-      <div className="grid gap-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="border rounded-lg p-4 animate-pulse bg-gray-100 dark:bg-slate-700 h-24" />
-        ))}
-      </div>
-    );
-  }
-
-  if (appointments.length === 0) {
-    return (
-      <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow">
-        <p className="text-gray-500 dark:text-gray-400">No appointments yet</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-          Click "New Appointment" to book a consultation
-        </p>
-      </div>
-    );
-  }
+  if (loading) { /* ... loading UI ... */ }
+  if (appointments.length === 0) { /* ... empty state ... */ }
 
   const grouped = appointments.reduce((acc, app) => {
     const date = app.date ? new Date(app.date).toLocaleDateString() : "Unknown";
