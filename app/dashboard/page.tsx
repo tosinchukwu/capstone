@@ -26,12 +26,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
-  const [pendingUpdate, setPendingUpdate] = useState<{ id: string; status: string } | null>(null);
 
   const { confirm: confirmAppointment, isPending: confirmPending, data: confirmData } = useConfirmAppointment();
   const { complete: completeAppointment, isPending: completePending, data: completeData } = useCompleteAppointment();
 
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const { isLoading: isWaiting, isSuccess, isError } = useWaitForTransactionReceipt({ hash: txHash });
 
   useEffect(() => {
@@ -125,81 +124,12 @@ export default function DashboardPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const updateAppointmentStatus = async (id: string, status: string) => {
-    try {
-      console.log("📡 updateAppointmentStatus called with:", { id, status });
-
-      const res = await fetch(`/api/appointments/${id}`);
-      if (!res.ok) throw new Error("Appointment not found");
-      const app = await res.json();
-
-      console.log("📋 Appointment data from API:", app);
-
-      const chainId = Number(app.chainAppointmentId);
-      console.log("🔗 chainAppointmentId:", chainId);
-
-      if (!chainId || chainId === 0) {
-        alert("❌ Invalid appointment ID. Please refresh and try again.");
-        return;
-      }
-
-      if (status === "CONFIRMED") {
-        console.log("⛓️ Calling confirmAppointment with chainId:", chainId);
-        confirmAppointment([BigInt(chainId)]);
-        setPendingUpdate({ id, status });
-        alert("⏳ Confirm transaction sent. Please approve in your wallet.");
-      } else if (status === "COMPLETED") {
-        console.log("⛓️ Calling completeAppointment with chainId:", chainId);
-        completeAppointment([BigInt(chainId)]);
-        setPendingUpdate({ id, status });
-        alert("⏳ Complete transaction sent. Please approve in your wallet.");
-      } else if (status === "CANCELLED") {
-        console.log("📝 Rejecting appointment (database only)");
-        const updateRes = await fetch(`/api/appointments/${id}`, {
-          method: "PUT",
-          body: JSON.stringify({ status }),
-          headers: { "Content-Type": "application/json" },
-        });
-        if (!updateRes.ok) throw new Error("Failed to update database");
-        setRefreshKey((prev) => prev + 1);
-        alert("✅ Appointment rejected.");
-      }
-    } catch (error) {
-      console.error("❌ Error:", error);
-      alert("Failed to update appointment: " + (error as Error).message);
-    }
-  };
+  // No updateAppointmentStatus here – AppointmentList handles it internally
 
   useEffect(() => {
     if (confirmData) setTxHash(confirmData as `0x${string}`);
     if (completeData) setTxHash(completeData as `0x${string}`);
   }, [confirmData, completeData]);
-
-  useEffect(() => {
-    if (isSuccess && pendingUpdate) {
-      const { id, status } = pendingUpdate;
-      fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status }),
-        headers: { "Content-Type": "application/json" },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to update DB");
-          setRefreshKey((prev) => prev + 1);
-          alert(`✅ Appointment ${status.toLowerCase()} successfully!`);
-          setPendingUpdate(null);
-        })
-        .catch((err) => {
-          console.error("DB update error:", err);
-          alert("❌ Transaction confirmed but failed to update database.");
-          setPendingUpdate(null);
-        });
-    }
-    if (isError) {
-      setPendingUpdate(null);
-      alert("❌ Transaction failed. Please try again.");
-    }
-  }, [isSuccess, isError, pendingUpdate]);
 
   const isContractPending = confirmPending || completePending || isWaiting;
 
@@ -242,13 +172,11 @@ export default function DashboardPage() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Appointments</h2>
-        {/* ✅ This is where the props are passed */}
+        {/* ✅ Only required props – onStatusUpdate and isPending are removed */}
         <AppointmentList
           doctorId={doctorId}
           refresh={refreshKey}
           onUpdate={handleRefreshAppointments}
-          onStatusUpdate={updateAppointmentStatus}
-          isPending={isContractPending}
         />
       </div>
 
