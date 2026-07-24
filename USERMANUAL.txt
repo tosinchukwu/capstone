@@ -1,0 +1,154 @@
+📱 User Guide – Health Consultation Booking App
+This guide walks you through using the platform, whether you’re a patient or a doctor. The app uses your crypto wallet (via Privy) for authentication – you can log in with email, Google, or a wallet like MetaMask.
+
+🟢 For Patients
+1. Connect Your Wallet
+Visit the website: https://healthconsult-neon.vercel.app
+
+Click “Connect” (or “Connect / Sign Up”) in the top‑right corner.
+
+Choose your login method: Email, Google, or Wallet (MetaMask/Rabby).
+
+If you choose a wallet, make sure you are on the Sepolia testnet.
+
+2. Choose Your Role
+After connecting, you’ll be asked: “Are you a patient or a doctor?”
+
+Select “I’m a Patient”.
+
+(Optional) Tick “Remember my choice” so you don’t have to select again next time.
+
+3. Book an Appointment
+On the homepage, click “+ New Appointment”.
+
+You’ll see a list of registered doctors. Select one.
+
+Pick an available time slot from the dropdown.
+
+Fill in your name and a description (e.g., symptoms).
+
+Click “Book Appointment”.
+
+Your wallet will pop up – confirm the transaction (a small gas fee on Sepolia).
+
+Wait for the transaction to be mined – you’ll see a success alert.
+
+4. View Your Appointments
+After booking, you’ll return to the homepage.
+
+Under “Your Appointments”, you’ll see a list of your bookings.
+
+Each appointment card shows:
+
+Patient name (you), doctor’s short address, date, and status (Pending / Confirmed / Completed).
+
+Click “View Details” to see the full information, including the on‑chain date and status.
+
+5. Check Appointment Status
+The status updates automatically:
+
+PENDING – waiting for doctor confirmation.
+
+CONFIRMED – doctor has accepted.
+
+COMPLETED – consultation is done.
+
+You’ll also see a greeting like “Good Morning, [your ENS or wallet address] 👋” when you’re logged in.
+
+6. Change Role or Disconnect
+In the navbar, you can switch to Doctor role (if you’re also a doctor) by clicking “Switch Role”.
+
+To log out, click “Disconnect” – your address will disappear from the dashboard.
+
+🔵 For Doctors
+1. Connect Your Wallet
+Same as patients: connect via Privy (email, Google, or wallet).
+
+2. Choose Your Role
+Select “I’m a Doctor”.
+
+If you haven’t registered yet, you’ll be redirected to the Doctor Registration page.
+
+3. Complete Your Profile
+Fill in your full name, email, specialty, hospital, location, years of experience, and a short bio.
+
+You can also toggle “Auto-confirm appointments” – if enabled, appointments will be confirmed automatically without your manual approval.
+
+Click “Register” – you’ll be taken to your Doctor Dashboard.
+
+4. Create Availability Slots
+In the Doctor Dashboard, scroll to “Manage Slots”.
+
+Pick a date, a start time, and an end time for the slot.
+
+Click “Add Slot”. The slot will appear in the list.
+
+Patients will see these slots when booking appointments.
+
+5. View Pending Appointments
+In the Dashboard, the “Appointments” section shows all bookings made with you.
+
+Each card displays:
+
+Patient name, date, description, and current status.
+
+You can also refresh the list using the “Refresh Appointments” button.
+
+6. Confirm, Reject, or Complete Appointments
+For a PENDING appointment, you can:
+
+Confirm – accept the appointment (triggers a wallet transaction).
+
+Reject – cancel the appointment (database only, no contract call).
+
+For a CONFIRMED appointment, you can:
+
+Complete – mark the consultation as done (triggers a wallet transaction).
+
+After confirming or completing, the status will update automatically on both your dashboard and the patient’s view.
+
+7. Edit Your Profile
+Click “Edit Profile” in the dashboard to update your details (specialty, hospital, etc.).
+
+Changes will reflect immediately in the patient booking form.
+
+8. Manage Slots
+You can delete any slot that hasn’t been booked yet – useful if your schedule changes.
+
+9. Switch Role or Disconnect
+In the navbar, you can switch back to Patient role if needed.
+
+Click “Disconnect” to log out.
+
+🌟 For Both Roles – Extra Features
+Theme & Appearance
+Click the gear icon (⚙️) in the navbar to open theme settings.
+
+Choose between Light or Dark mode.
+
+The color palette is fixed to a clean medical theme – no extra themes to confuse.
+
+Health Tips
+Below your appointments, you’ll find “💡 Daily Health Tips” – a curated list of wellness advice.
+
+You can filter by category and view all tips on the dedicated /tips page.
+
+Admin Panel (For Admins Only)
+If you have admin privileges, you’ll see an “Admin Panel” link at the bottom of the homepage.
+
+There you can manage doctors, hospital settings, and view statistics.
+
+❓ Common Questions
+Q: What if I don’t see any doctors?
+A: Make sure at least one doctor has registered and created slots. If not, ask a doctor to sign up.
+
+Q: The wallet pop‑up doesn’t appear?
+A: Check that your wallet (MetaMask/Rabby) is unlocked, you’re on Sepolia, and pop‑ups are allowed for the site.
+
+Q: I see “Invalid date” on an appointment?
+A: This usually means the appointment was created before the date fix was deployed. New appointments will show the correct date. Old ones will display “Not set”.
+
+Q: Can I use the same wallet for both patient and doctor?
+A: Yes, but you’ll need to switch roles in the UI. The contract allows the same address to act as both, but for realistic use, separate wallets are recommended.
+
+That’s it! You’re now ready to use MEDCRUSH Blockchain Hospital.
