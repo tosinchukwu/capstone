@@ -70,7 +70,6 @@ export default function AppointmentList({
     fetchAppointments();
   }, [patientId, patientWallet, doctorId, refresh, refreshTrigger]);
 
-  // ✅ When transaction data arrives, set the hash
   useEffect(() => {
     if (confirmData) {
       console.log("⛓️ confirmData received:", confirmData);
@@ -82,7 +81,6 @@ export default function AppointmentList({
     }
   }, [confirmData, completeData]);
 
-  // ✅ When transaction succeeds, refresh the list
   useEffect(() => {
     if (isSuccess) {
       console.log("✅ Transaction mined – refreshing appointments");
@@ -106,7 +104,6 @@ export default function AppointmentList({
     }
   };
 
-  // ✅ Correct status update handler – no false errors
   const handleStatusUpdate = (id: string, status: string) => {
     console.log("📤 handleStatusUpdate called:", { id, status });
 
