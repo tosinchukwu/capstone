@@ -20,7 +20,7 @@ export function useCreateAppointment() {
         functionName: "createAppointment",
         args,
       });
-      console.log("📤 Sending transaction with sponsor: true");
+      console.log("📤 Sending createAppointment with sponsor: true");
       const result = await sendTransaction(
         {
           to: contractConfig.address,
@@ -31,11 +31,11 @@ export function useCreateAppointment() {
           sponsor: true,
         }
       );
-      console.log("✅ Transaction sent, hash:", result);
+      console.log("✅ createAppointment tx sent, hash:", result);
       setData(result);
       return result;
     } catch (err) {
-      console.error("❌ Transaction failed:", err);
+      console.error("❌ createAppointment tx failed:", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -46,4 +46,96 @@ export function useCreateAppointment() {
   return { create, isPending, error, data };
 }
 
-// Same for confirm and complete – apply the same logging
+export function useConfirmAppointment() {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<any>(null);
+  const { sendTransaction } = useSendTransaction();
+
+  const confirm = async (args: any[]) => {
+    console.log("⛓️ confirm() called with args:", args);
+    setIsPending(true);
+    setError(null);
+    try {
+      const encodedData = encodeFunctionData({
+        abi: contractConfig.abi,
+        functionName: "confirmAppointment",
+        args,
+      });
+      console.log("📤 Sending confirmAppointment with sponsor: true");
+      const result = await sendTransaction(
+        {
+          to: contractConfig.address,
+          data: encodedData,
+          chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "11155111"),
+        },
+        {
+          sponsor: true,
+        }
+      );
+      console.log("✅ confirmAppointment tx sent, hash:", result);
+      setData(result);
+      return result;
+    } catch (err) {
+      console.error("❌ confirmAppointment tx failed:", err);
+      setError(err as Error);
+      throw err;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { confirm, isPending, error, data };
+}
+
+export function useCompleteAppointment() {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<any>(null);
+  const { sendTransaction } = useSendTransaction();
+
+  const complete = async (args: any[]) => {
+    console.log("⛓️ complete() called with args:", args);
+    setIsPending(true);
+    setError(null);
+    try {
+      const encodedData = encodeFunctionData({
+        abi: contractConfig.abi,
+        functionName: "completeAppointment",
+        args,
+      });
+      console.log("📤 Sending completeAppointment with sponsor: true");
+      const result = await sendTransaction(
+        {
+          to: contractConfig.address,
+          data: encodedData,
+          chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "11155111"),
+        },
+        {
+          sponsor: true,
+        }
+      );
+      console.log("✅ completeAppointment tx sent, hash:", result);
+      setData(result);
+      return result;
+    } catch (err) {
+      console.error("❌ completeAppointment tx failed:", err);
+      setError(err as Error);
+      throw err;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { complete, isPending, error, data };
+}
+
+export function useGetAppointment(id: number) {
+  const result = useReadContract({
+    address: contractConfig.address,
+    abi: contractConfig.abi,
+    functionName: "getAppointment",
+    args: [BigInt(id)],
+  });
+  return result;
+}
