@@ -60,8 +60,6 @@ function useContractWrite(functionName: string) {
   return { write, isPending: isPending || wagmiPending, data };
 }
 
-// ----- PUBLIC HOOKS -----
-
 export function useCreateAppointment() {
   const { write, isPending, data } = useContractWrite("createAppointment");
   const create = async (args: any[]) => {
@@ -88,8 +86,6 @@ export function useCompleteAppointment() {
   };
   return { complete, isPending, data };
 }
-
-// ----- READ HOOK -----
 
 export function useGetAppointment(id: number) {
   const result = useReadContract({
