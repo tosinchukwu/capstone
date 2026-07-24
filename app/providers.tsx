@@ -1,4 +1,3 @@
-cat > app/providers.tsx << 'EOF'
 "use client";
 
 import { ThemeProvider as NextThemeProvider } from "next-themes";
@@ -48,4 +47,4 @@ export function Providers({ children }: { children: React.ReactNode }) {
     </NextThemeProvider>
   );
 }
-EOF
+
