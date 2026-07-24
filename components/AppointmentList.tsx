@@ -20,7 +20,7 @@ interface AppointmentListProps {
   doctorId?: string;
   refresh?: number;
   onUpdate?: () => void;
-  isPending?: boolean; // from parent to disable buttons
+  isPending?: boolean;
 }
 
 export default function AppointmentList({
@@ -34,6 +34,7 @@ export default function AppointmentList({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // ✅ local refresh counter
 
   const { confirm: confirmAppointment, data: confirmData } = useConfirmAppointment();
   const { complete: completeAppointment, data: completeData } = useCompleteAppointment();
@@ -47,12 +48,14 @@ export default function AppointmentList({
     if (patientWallet) params.append("patientWallet", patientWallet);
     if (doctorId) params.append("doctorId", doctorId);
     const url = `/api/appointments?${params.toString()}`;
+    console.log("📡 Fetching appointments with params:", params.toString());
     fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch appointments");
         return res.json();
       })
       .then((data) => {
+        console.log("✅ Fetched appointments:", data.length);
         setAppointments(data);
         setLoading(false);
       })
@@ -62,22 +65,31 @@ export default function AppointmentList({
       });
   };
 
+  // Initial fetch and refresh on external refresh or doctorId change
   useEffect(() => {
     fetchAppointments();
-  }, [patientId, patientWallet, doctorId, refresh]);
+  }, [patientId, patientWallet, doctorId, refresh, refreshTrigger]);
 
   // When transaction hash appears, start waiting
   useEffect(() => {
-    if (confirmData) setTxHash(confirmData as `0x${string}`);
-    if (completeData) setTxHash(completeData as `0x${string}`);
+    if (confirmData) {
+      console.log("⛓️ confirmData received:", confirmData);
+      setTxHash(confirmData as `0x${string}`);
+    }
+    if (completeData) {
+      console.log("⛓️ completeData received:", completeData);
+      setTxHash(completeData as `0x${string}`);
+    }
   }, [confirmData, completeData]);
 
-  // When transaction succeeds, refresh list
+  // When transaction succeeds, refresh list and update parent
   useEffect(() => {
     if (isSuccess) {
-      fetchAppointments();
-      if (onUpdate) onUpdate();
-      setTxHash(undefined); // reset
+      console.log("✅ Transaction mined – refreshing appointments");
+      fetchAppointments(); // immediate refresh
+      setRefreshTrigger((prev) => prev + 1); // trigger another refresh via effect
+      if (onUpdate) onUpdate(); // inform parent to refresh too
+      setTxHash(undefined); // reset for next transaction
     }
   }, [isSuccess]);
 
@@ -94,9 +106,9 @@ export default function AppointmentList({
   };
 
   const handleStatusUpdate = (id: string, status: string) => {
-    console.log("📤 AppointmentList.handleStatusUpdate called:", { id, status });
+    console.log("📤 handleStatusUpdate called:", { id, status });
 
-    // Check if already processing a transaction
+    // Prevent overlapping transactions
     if (isWaiting || txHash) {
       alert("⏳ A transaction is already in progress. Please wait.");
       return;
@@ -146,7 +158,6 @@ export default function AppointmentList({
       });
   };
 
-  // Combine pending states: parent's isPending OR local waiting for receipt
   const combinedPending = isPending || isWaiting || !!txHash;
 
   if (loading) {
