@@ -1,10 +1,7 @@
-// ✅ Use @privy-io/wagmi for write hooks (supports sponsorship)
-import { useWriteContract } from "@privy-io/wagmi";
-// ✅ Keep useReadContract from wagmi (reads don't need sponsorship)
-import { useReadContract } from "wagmi";
+import { useWriteContract, useReadContract } from "wagmi";
 import { contractConfig } from "@/lib/contract";
 
-// ----- WRITE HOOKS (with gas sponsorship) -----
+// Gas sponsorship is enabled via Privy Dashboard – no code changes needed
 
 export function useCreateAppointment() {
   const { writeContract, isPending, error, data } = useWriteContract();
@@ -12,15 +9,12 @@ export function useCreateAppointment() {
   const create = (args: any[]) => {
     console.log("⛓️ create() called with args:", args);
     console.log("⛓️ contractConfig:", contractConfig);
-    writeContract(
-      {
-        address: contractConfig.address,
-        abi: contractConfig.abi,
-        functionName: "createAppointment",
-        args,
-      },
-      { sponsor: true } // ✅ Enable gas sponsorship
-    );
+    writeContract({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "createAppointment",
+      args,
+    });
   };
 
   return { create, isPending, error, data };
@@ -32,15 +26,12 @@ export function useConfirmAppointment() {
   const confirm = (args: any[]) => {
     console.log("⛓️ confirm() called with args:", args);
     console.log("⛓️ contractConfig:", contractConfig);
-    writeContract(
-      {
-        address: contractConfig.address,
-        abi: contractConfig.abi,
-        functionName: "confirmAppointment",
-        args,
-      },
-      { sponsor: true } // ✅ Enable gas sponsorship
-    );
+    writeContract({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "confirmAppointment",
+      args,
+    });
   };
   return { confirm, isPending, error, data };
 }
@@ -51,20 +42,15 @@ export function useCompleteAppointment() {
   const complete = (args: any[]) => {
     console.log("⛓️ complete() called with args:", args);
     console.log("⛓️ contractConfig:", contractConfig);
-    writeContract(
-      {
-        address: contractConfig.address,
-        abi: contractConfig.abi,
-        functionName: "completeAppointment",
-        args,
-      },
-      { sponsor: true } // ✅ Enable gas sponsorship
-    );
+    writeContract({
+      address: contractConfig.address,
+      abi: contractConfig.abi,
+      functionName: "completeAppointment",
+      args,
+    });
   };
   return { complete, isPending, error, data };
 }
-
-// ----- READ HOOK (no changes needed) -----
 
 export function useGetAppointment(id: number) {
   const result = useReadContract({
