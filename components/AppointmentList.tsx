@@ -70,6 +70,7 @@ export default function AppointmentList({
     fetchAppointments();
   }, [patientId, patientWallet, doctorId, refresh, refreshTrigger]);
 
+  // ✅ When transaction data arrives, set the hash
   useEffect(() => {
     if (confirmData) {
       console.log("⛓️ confirmData received:", confirmData);
