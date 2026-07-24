@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 function serializeBigInt(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'bigint') return obj.toString();
+  if (obj instanceof Date) return obj.toISOString(); // ✅ Date → ISO string
   if (Array.isArray(obj)) return obj.map(serializeBigInt);
   if (typeof obj === 'object') {
     const result: any = {};
@@ -20,7 +21,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    let appointment = await prisma.appointment.findUnique({
+    const appointment = await prisma.appointment.findUnique({
       where: { id: params.id },
       include: {
         patient: true,
@@ -28,29 +29,13 @@ export async function GET(
         availability: true,
       },
     });
-
-    // If not found by UUID, try to find by chainAppointmentId (if ID is numeric)
-    if (!appointment && !isNaN(Number(params.id))) {
-      const chainId = BigInt(params.id);
-      appointment = await prisma.appointment.findFirst({
-        where: { chainAppointmentId: chainId },
-        include: {
-          patient: true,
-          doctor: true,
-          availability: true,
-        },
-      });
-    }
-
     if (!appointment) {
-      console.log(`❌ Appointment not found for ID: ${params.id}`);
       return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
     }
-
     const serialized = serializeBigInt(appointment);
     return NextResponse.json(serialized);
   } catch (error) {
-    console.error("❌ GET appointment error:", error);
+    console.error("GET appointment error:", error);
     return NextResponse.json(
       { error: "Failed to fetch appointment" },
       { status: 500 }
@@ -76,21 +61,8 @@ export async function PUT(
     if (date) data.date = new Date(date);
     if (description) data.description = description;
 
-    let appointment = await prisma.appointment.findUnique({
-      where: { id: params.id },
-    });
-    if (!appointment && !isNaN(Number(params.id))) {
-      const chainId = BigInt(params.id);
-      appointment = await prisma.appointment.findFirst({
-        where: { chainAppointmentId: chainId },
-      });
-    }
-    if (!appointment) {
-      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
-    }
-
     const updated = await prisma.appointment.update({
-      where: { id: appointment.id },
+      where: { id: params.id },
       data,
       include: { patient: true, doctor: true },
     });
@@ -111,20 +83,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    let appointment = await prisma.appointment.findUnique({
-      where: { id: params.id },
-    });
-    if (!appointment && !isNaN(Number(params.id))) {
-      const chainId = BigInt(params.id);
-      appointment = await prisma.appointment.findFirst({
-        where: { chainAppointmentId: chainId },
-      });
-    }
-    if (!appointment) {
-      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
-    }
-
-    await prisma.appointment.delete({ where: { id: appointment.id } });
+    await prisma.appointment.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE appointment error:", error);
