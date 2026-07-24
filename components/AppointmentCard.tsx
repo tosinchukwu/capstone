@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 
 type Appointment = {
-  id: string;
+  id: string; // ✅ UUID – this is the database primary key
   chainAppointmentId: string | number;
   patient: { name: string; wallet: string } | null;
   doctor: { name: string; wallet: string } | null;
@@ -26,7 +26,6 @@ export default function AppointmentCard({
 }: AppointmentCardProps) {
   const { address } = useAccount();
 
-  // ✅ Clean formatter – never shows "Invalid date"
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Not set";
     const d = new Date(dateStr);
@@ -45,31 +44,22 @@ export default function AppointmentCard({
   const canComplete = isDoctor && appointment.status === "CONFIRMED";
   const canReject = isDoctor && appointment.status === "PENDING";
 
-  // ✅ Add debug logging
   const handleConfirm = () => {
-    console.log("🔵 Confirm clicked for appointment:", appointment.id);
-    console.log("🔵 chainAppointmentId:", appointment.chainAppointmentId);
-    if (onStatusUpdate) {
-      onStatusUpdate(appointment.id, "CONFIRMED");
-    }
+    if (onStatusUpdate) onStatusUpdate(appointment.id, "CONFIRMED");
   };
 
   const handleComplete = () => {
-    console.log("🟢 Complete clicked for appointment:", appointment.id);
-    if (onStatusUpdate) {
-      onStatusUpdate(appointment.id, "COMPLETED");
-    }
+    if (onStatusUpdate) onStatusUpdate(appointment.id, "COMPLETED");
   };
 
   const handleReject = () => {
     if (window.confirm("Reject this appointment?")) {
-      console.log("🔴 Reject clicked for appointment:", appointment.id);
       if (onStatusUpdate) onStatusUpdate(appointment.id, "CANCELLED");
     }
   };
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this appointment? This action cannot be undone.")) {
+    if (window.confirm("Delete this appointment?")) {
       if (onDelete) onDelete(appointment.id);
     }
   };
@@ -108,6 +98,7 @@ export default function AppointmentCard({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
+          {/* ✅ Always use the UUID (appointment.id) for the link */}
           <Link
             href={`/appointments/${appointment.id}`}
             className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
