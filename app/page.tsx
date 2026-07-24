@@ -19,11 +19,17 @@ export default function Home() {
   const { wallets, ready } = useWallets();
   const [role, setRole] = useState<"patient" | "doctor" | null>(null);
   const [rememberChoice, setRememberChoice] = useState(true);
+  const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as "patient" | "doctor" | null;
     if (savedRole) setRole(savedRole);
   }, []);
+
+  // Debug: log wallet state
+  useEffect(() => {
+    console.log("🔍 Wallet state:", { ready, wallets: wallets.length, authenticated, forceShow });
+  }, [ready, wallets, authenticated, forceShow]);
 
   const selectRole = (selected: "patient" | "doctor") => {
     setRole(selected);
@@ -79,10 +85,11 @@ export default function Home() {
     );
   }
 
-  // ✅ Wallet creation loading state
-  const isCreating = ready && wallets.length === 0 && authenticated;
+  // ✅ Wallet creation loading state with skip
+  const isCreating = ready && wallets.length === 0 && authenticated && !forceShow;
+
   if (isCreating) {
-    return <WalletCreationLoader />;
+    return <WalletCreationLoader onSkip={() => setForceShow(true)} />;
   }
 
   return (
@@ -139,13 +146,13 @@ export default function Home() {
           <div>
             <Greeting />
 
+            {/* ✅ WalletInfo shown after greeting */}
+            <div className="mt-4 mb-6">
+              <WalletInfo />
+            </div>
+
             {role === "patient" && (
               <>
-                {/* ✅ WalletInfo visible for patients */}
-                <div className="mt-4 mb-6">
-                  <WalletInfo />
-                </div>
-
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
                   <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
