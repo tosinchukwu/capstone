@@ -226,4 +226,4 @@ export default function AppointmentList({
       ))}
     </div>
   );
-}
+} 
