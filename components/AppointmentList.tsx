@@ -70,6 +70,7 @@ export default function AppointmentList({
     fetchAppointments();
   }, [patientId, patientWallet, doctorId, refresh, refreshTrigger]);
 
+  // When transaction data arrives, set the hash
   useEffect(() => {
     if (confirmData) {
       console.log("⛓️ confirmData received:", confirmData);
@@ -81,38 +82,32 @@ export default function AppointmentList({
     }
   }, [confirmData, completeData]);
 
-  // ✅ Enhanced: log when isSuccess triggers and update database
+  // When transaction succeeds, refresh the list
   useEffect(() => {
-    if (isSuccess && pendingUpdate) {
-      const { id, status } = pendingUpdate;
-      console.log(`📝 isSuccess with pendingUpdate: ${id} → ${status}`);
-      fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status }),
-        headers: { "Content-Type": "application/json" },
-      })
-        .then(async (res) => {
-          const text = await res.text();
-          console.log(`📡 PUT response status: ${res.status}, body: ${text}`);
-          if (!res.ok) throw new Error(text);
-          return JSON.parse(text);
-        })
-        .then((data) => {
-          console.log("✅ Database updated:", data);
-          fetchAppointments();
-          setRefreshTrigger((prev) => prev + 1);
-          if (onUpdate) onUpdate();
-          setPendingUpdate(null);
-          setTxHash(undefined);
-        })
-        .catch((err) => {
-          console.error("❌ Database update failed:", err);
-          alert("⚠️ Transaction succeeded but database update failed.");
-          setPendingUpdate(null);
-          setTxHash(undefined);
-        });
+    if (isSuccess) {
+      console.log("✅ Transaction mined – refreshing appointments");
+      fetchAppointments();
+      setRefreshTrigger((prev) => prev + 1);
+      if (onUpdate) onUpdate();
+      setTxHash(undefined);
+      setPendingUpdate(null);
     }
-  }, [isSuccess, pendingUpdate]);
+  }, [isSuccess]);
+
+  // ✅ Fallback: after sending a transaction, also refresh after 15 seconds
+  useEffect(() => {
+    if (txHash && !isSuccess) {
+      const timeout = setTimeout(() => {
+        console.log("⏳ Fallback refresh after 15 seconds");
+        fetchAppointments();
+        setRefreshTrigger((prev) => prev + 1);
+        if (onUpdate) onUpdate();
+        setTxHash(undefined);
+        setPendingUpdate(null);
+      }, 15000);
+      return () => clearTimeout(timeout);
+    }
+  }, [txHash, isSuccess]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -157,7 +152,6 @@ export default function AppointmentList({
           completeAppointment([BigInt(chainId)]);
           alert("⏳ Complete transaction sent. Please approve in your wallet.");
         } else if (status === "CANCELLED") {
-          // No contract call, just update DB
           setPendingUpdate(null);
           fetch(`/api/appointments/${id}`, {
             method: "PUT",
