@@ -5,17 +5,18 @@ import { createPublicClient, http, formatEther } from "viem";
 import { sepolia } from "viem/chains";
 
 export default function WalletInfo() {
-  const { wallets } = useWallets();
+  const { wallets, ready } = useWallets();
   const { exportWallet } = usePrivy();
   const [balance, setBalance] = useState("");
   const [showExport, setShowExport] = useState(false);
 
+  // Find the embedded wallet
   const embeddedWallet = wallets.find(
     (wallet) => wallet.walletClientType === "privy"
   );
   const walletAddress = embeddedWallet?.address;
+  const isEmbedded = !!embeddedWallet;
 
-  // Fetch balance
   useEffect(() => {
     async function fetchBalance() {
       if (!walletAddress) return;
@@ -35,8 +36,8 @@ export default function WalletInfo() {
     fetchBalance();
   }, [walletAddress]);
 
-  // ✅ If no embedded wallet or no address, return null
-  if (!embeddedWallet || !walletAddress) {
+  // ❌ Only show for embedded wallets
+  if (!ready || !isEmbedded || !walletAddress) {
     return null;
   }
 
@@ -46,7 +47,7 @@ export default function WalletInfo() {
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-3 sm:p-4 max-w-sm mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Your Wallet</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Your Wallet (Privy)</p>
           <p className="text-sm font-mono text-gray-800 dark:text-gray-100 truncate" title={walletAddress}>
             {truncatedAddress}
           </p>
