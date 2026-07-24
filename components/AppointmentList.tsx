@@ -34,7 +34,8 @@ export default function AppointmentList({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // ✅ local refresh counter
+  const [pendingUpdate, setPendingUpdate] = useState<{ id: string; status: string } | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { confirm: confirmAppointment, data: confirmData } = useConfirmAppointment();
   const { complete: completeAppointment, data: completeData } = useCompleteAppointment();
@@ -48,7 +49,6 @@ export default function AppointmentList({
     if (patientWallet) params.append("patientWallet", patientWallet);
     if (doctorId) params.append("doctorId", doctorId);
     const url = `/api/appointments?${params.toString()}`;
-    console.log("📡 Fetching appointments with params:", params.toString());
     fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch appointments");
@@ -65,12 +65,10 @@ export default function AppointmentList({
       });
   };
 
-  // Initial fetch and refresh on external refresh or doctorId change
   useEffect(() => {
     fetchAppointments();
   }, [patientId, patientWallet, doctorId, refresh, refreshTrigger]);
 
-  // When transaction hash appears, start waiting
   useEffect(() => {
     if (confirmData) {
       console.log("⛓️ confirmData received:", confirmData);
@@ -82,16 +80,35 @@ export default function AppointmentList({
     }
   }, [confirmData, completeData]);
 
-  // When transaction succeeds, refresh list and update parent
+  // ✅ When transaction succeeds, update database then refresh
   useEffect(() => {
-    if (isSuccess) {
-      console.log("✅ Transaction mined – refreshing appointments");
-      fetchAppointments(); // immediate refresh
-      setRefreshTrigger((prev) => prev + 1); // trigger another refresh via effect
-      if (onUpdate) onUpdate(); // inform parent to refresh too
-      setTxHash(undefined); // reset for next transaction
+    if (isSuccess && pendingUpdate) {
+      const { id, status } = pendingUpdate;
+      console.log(`📝 Updating database for appointment ${id} to ${status}`);
+      
+      fetch(`/api/appointments/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to update database");
+          console.log(`✅ Database updated: ${id} → ${status}`);
+          // Refresh list after DB update
+          fetchAppointments();
+          setRefreshTrigger((prev) => prev + 1);
+          if (onUpdate) onUpdate();
+          setPendingUpdate(null);
+          setTxHash(undefined);
+        })
+        .catch((err) => {
+          console.error("❌ Database update error:", err);
+          alert("⚠️ Transaction succeeded but failed to update database.");
+          setPendingUpdate(null);
+          setTxHash(undefined);
+        });
     }
-  }, [isSuccess]);
+  }, [isSuccess, pendingUpdate]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -108,7 +125,6 @@ export default function AppointmentList({
   const handleStatusUpdate = (id: string, status: string) => {
     console.log("📤 handleStatusUpdate called:", { id, status });
 
-    // Prevent overlapping transactions
     if (isWaiting || txHash) {
       alert("⏳ A transaction is already in progress. Please wait.");
       return;
@@ -126,6 +142,9 @@ export default function AppointmentList({
           return;
         }
 
+        // Store pending update info
+        setPendingUpdate({ id, status });
+
         if (status === "CONFIRMED") {
           console.log("⛓️ Calling confirmAppointment with chainId:", chainId);
           confirmAppointment([BigInt(chainId)]);
@@ -135,6 +154,8 @@ export default function AppointmentList({
           completeAppointment([BigInt(chainId)]);
           alert("⏳ Complete transaction sent. Please approve in your wallet.");
         } else if (status === "CANCELLED") {
+          // Reject: no contract call, just DB update
+          setPendingUpdate(null);
           fetch(`/api/appointments/${id}`, {
             method: "PUT",
             body: JSON.stringify({ status }),
