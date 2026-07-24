@@ -24,42 +24,74 @@ export default function AppointmentDetail({ id }: { id: number }) {
 
   const { data: contractData, refetch: refetchContract } = useGetAppointment(validId);
 
-  const fetchDbData = async () => {
-    if (!id || id < 0) return;
-    try {
-      const res = await fetch(`/api/appointments/${id}`);
-      if (!res.ok) throw new Error("Appointment not found");
-      const data = await res.json();
-      setDbData(data);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const fetchAllData = async () => {
+  // ✅ Fetch both sources – used for initial load and refresh
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setRefreshing(true);
     setError(null);
+
     try {
-      await Promise.all([fetchDbData(), refetchContract()]);
-    } catch (err) {
-      console.error("Refresh error:", err);
+      // 1. Fetch database data
+      const dbRes = await fetch(`/api/appointments/${id}`);
+      if (!dbRes.ok) throw new Error("Appointment not found in database");
+      const dbJson = await dbRes.json();
+      setDbData(dbJson);
+
+      // 2. Fetch contract data (refetch)
+      await refetchContract();
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      setError(err.message || "Failed to load appointment");
     } finally {
+      setLoading(false);
       setRefreshing(false);
     }
   };
 
+  // ✅ Initial load
   useEffect(() => {
-    fetchAllData();
+    fetchData(true);
   }, [id]);
 
-  if (loading) return <div className="p-4">Loading appointment details...</div>;
-  if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
-  if (!dbData || !contractData) return <div className="p-4">No data available.</div>;
+  // ✅ Manual refresh
+  const handleRefresh = () => {
+    fetchData(false);
+  };
+
+  // Loading / error states
+  if (loading) {
+    return (
+      <div className="p-4 text-center text-gray-600 dark:text-gray-300">
+        Loading appointment details...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-center text-red-600">
+        Error: {error}
+        <button
+          onClick={handleRefresh}
+          className="ml-4 text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!dbData || !contractData) {
+    return (
+      <div className="p-4 text-center text-gray-500">No data available.</div>
+    );
+  }
 
   const data = contractData as unknown as AppointmentContract;
   const { patient, doctor, isConfirmed, isCompleted } = data;
-
-  const contractDate = data.date ? new Date(Number(data.date) * 1000).toLocaleString() : "N/A";
+  const contractDate = data.date
+    ? new Date(Number(data.date) * 1000).toLocaleString()
+    : "N/A";
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -71,7 +103,7 @@ export default function AppointmentDetail({ id }: { id: number }) {
           ← Back to Home
         </Link>
         <button
-          onClick={fetchAllData}
+          onClick={handleRefresh}
           disabled={refreshing}
           className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1 rounded transition disabled:opacity-50"
         >
@@ -81,10 +113,20 @@ export default function AppointmentDetail({ id }: { id: number }) {
 
       <h1 className="text-2xl font-bold">Appointment #{validId}</h1>
       <div className="mt-4 space-y-2">
-        <p><strong>Patient:</strong> {dbData.patient?.name || "Unknown"} ({patient})</p>
-        <p><strong>Doctor:</strong> {dbData.doctor?.name || "Unknown"} ({doctor})</p>
-        <p><strong>Description:</strong> {dbData.description || "No description"}</p>
-        <p><strong>Date:</strong> {contractDate}</p>
+        <p>
+          <strong>Patient:</strong> {dbData.patient?.name || "Unknown"} (
+          {patient})
+        </p>
+        <p>
+          <strong>Doctor:</strong> {dbData.doctor?.name || "Unknown"} (
+          {doctor})
+        </p>
+        <p>
+          <strong>Description:</strong> {dbData.description || "No description"}
+        </p>
+        <p>
+          <strong>Date:</strong> {contractDate}
+        </p>
         <p>
           <strong>Status:</strong>{" "}
           <span
