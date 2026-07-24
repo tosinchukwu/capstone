@@ -81,16 +81,38 @@ export default function AppointmentList({
     }
   }, [confirmData, completeData]);
 
+  // ✅ Enhanced: log when isSuccess triggers and update database
   useEffect(() => {
-    if (isSuccess) {
-      console.log("✅ Transaction mined – refreshing appointments");
-      fetchAppointments();
-      setRefreshTrigger((prev) => prev + 1);
-      if (onUpdate) onUpdate();
-      setTxHash(undefined);
-      setPendingUpdate(null);
+    if (isSuccess && pendingUpdate) {
+      const { id, status } = pendingUpdate;
+      console.log(`📝 isSuccess with pendingUpdate: ${id} → ${status}`);
+      fetch(`/api/appointments/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(async (res) => {
+          const text = await res.text();
+          console.log(`📡 PUT response status: ${res.status}, body: ${text}`);
+          if (!res.ok) throw new Error(text);
+          return JSON.parse(text);
+        })
+        .then((data) => {
+          console.log("✅ Database updated:", data);
+          fetchAppointments();
+          setRefreshTrigger((prev) => prev + 1);
+          if (onUpdate) onUpdate();
+          setPendingUpdate(null);
+          setTxHash(undefined);
+        })
+        .catch((err) => {
+          console.error("❌ Database update failed:", err);
+          alert("⚠️ Transaction succeeded but database update failed.");
+          setPendingUpdate(null);
+          setTxHash(undefined);
+        });
     }
-  }, [isSuccess]);
+  }, [isSuccess, pendingUpdate]);
 
   const handleDelete = async (id: string) => {
     try {
