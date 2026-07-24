@@ -18,31 +18,38 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const [dbData, setDbData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const validId = Number.isInteger(id) && id >= 0 ? id : 0;
 
-  const { data: contractData, refetch } = useGetAppointment(validId);
+  const { data: contractData, refetch: refetchContract } = useGetAppointment(validId);
+
+  const fetchDbData = async () => {
+    if (!id || id < 0) return;
+    try {
+      const res = await fetch(`/api/appointments/${id}`);
+      if (!res.ok) throw new Error("Appointment not found");
+      const data = await res.json();
+      setDbData(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const fetchAllData = async () => {
+    setRefreshing(true);
+    setError(null);
+    try {
+      await Promise.all([fetchDbData(), refetchContract()]);
+    } catch (err) {
+      console.error("Refresh error:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    if (!id || id < 0) {
-      setLoading(false);
-      setError("Invalid appointment ID");
-      return;
-    }
-    fetch(`/api/appointments/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Appointment not found");
-        return res.json();
-      })
-      .then((data) => {
-        setDbData(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch appointment:", err);
-        setError(err.message);
-        setLoading(false);
-      });
+    fetchAllData();
   }, [id]);
 
   if (loading) return <div className="p-4">Loading appointment details...</div>;
@@ -56,12 +63,21 @@ export default function AppointmentDetail({ id }: { id: number }) {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <Link
-        href="/"
-        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4 transition"
-      >
-        ← Back to Home
-      </Link>
+      <div className="flex justify-between items-center mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition"
+        >
+          ← Back to Home
+        </Link>
+        <button
+          onClick={fetchAllData}
+          disabled={refreshing}
+          className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1 rounded transition disabled:opacity-50"
+        >
+          {refreshing ? "Refreshing..." : "⟳ Refresh"}
+        </button>
+      </div>
 
       <h1 className="text-2xl font-bold">Appointment #{validId}</h1>
       <div className="mt-4 space-y-2">
@@ -84,8 +100,6 @@ export default function AppointmentDetail({ id }: { id: number }) {
           </span>
         </p>
       </div>
-
-      {/* ✅ Confirm/Complete buttons removed – only view details */}
     </div>
   );
 }
