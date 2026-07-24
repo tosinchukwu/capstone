@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { useConfirmAppointment, useCompleteAppointment, useGetAppointment } from "@/hooks/useAppointments";
+import { useGetAppointment } from "@/hooks/useAppointments";
 import Link from "next/link";
 
 type AppointmentContract = {
@@ -22,8 +22,6 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const validId = Number.isInteger(id) && id >= 0 ? id : 0;
 
   const { data: contractData, refetch } = useGetAppointment(validId);
-  const { confirm, isPending: confirmPending } = useConfirmAppointment();
-  const { complete, isPending: completePending } = useCompleteAppointment();
 
   useEffect(() => {
     if (!id || id < 0) {
@@ -54,28 +52,13 @@ export default function AppointmentDetail({ id }: { id: number }) {
   const data = contractData as unknown as AppointmentContract;
   const { patient, doctor, isConfirmed, isCompleted } = data;
 
-  // ✅ Only contract date – no DB date
   const contractDate = data.date ? new Date(Number(data.date) * 1000).toLocaleString() : "N/A";
-
-  const handleConfirm = () => {
-    confirm([BigInt(validId)]);
-    setTimeout(refetch, 5000);
-  };
-
-  const handleComplete = () => {
-    complete([BigInt(validId)]);
-    setTimeout(refetch, 5000);
-  };
-
-  const isDoctor = doctor === address;
-  const canConfirm = isDoctor && !isConfirmed;
-  const canComplete = isDoctor && isConfirmed && !isCompleted;
 
   return (
     <div className="max-w-2xl mx-auto p-4">
       <Link
         href="/"
-        className="inline-flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 mb-4 transition"
+        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4 transition"
       >
         ← Back to Home
       </Link>
@@ -102,26 +85,7 @@ export default function AppointmentDetail({ id }: { id: number }) {
         </p>
       </div>
 
-      <div className="mt-6 space-x-2">
-        {canConfirm && (
-          <button
-            onClick={handleConfirm}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-50"
-            disabled={confirmPending}
-          >
-            {confirmPending ? "Confirming..." : "Confirm Appointment"}
-          </button>
-        )}
-        {canComplete && (
-          <button
-            onClick={handleComplete}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
-            disabled={completePending}
-          >
-            {completePending ? "Completing..." : "Complete Appointment"}
-          </button>
-        )}
-      </div>
+      {/* ✅ Confirm/Complete buttons removed – only view details */}
     </div>
   );
 }
