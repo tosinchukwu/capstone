@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useReadContract } from "wagmi";
-import { useSendTransaction } from "@privy-io/react-auth";
+import { useSendTransaction, useWallets } from "@privy-io/react-auth";
 import { contractConfig } from "@/lib/contract";
 import { encodeFunctionData } from "viem";
+
+// Helper to check if the connected wallet is a Privy embedded wallet
+const useIsEmbeddedWallet = () => {
+  const { wallets } = useWallets();
+  const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
+  return !!embeddedWallet;
+};
 
 // ----- WRITE HOOKS -----
 
@@ -11,9 +18,11 @@ export function useCreateAppointment() {
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
   const { sendTransaction } = useSendTransaction();
+  const isEmbedded = useIsEmbeddedWallet();
 
   const create = async (args: any[]) => {
     console.log("⛓️ create() called with args:", args);
+    console.log("🔑 Is embedded wallet?", isEmbedded);
     setIsPending(true);
     setError(null);
     try {
@@ -22,7 +31,7 @@ export function useCreateAppointment() {
         functionName: "createAppointment",
         args,
       });
-      console.log("📤 Sending createAppointment with sponsor: true");
+      console.log("📤 Sending createAppointment with sponsor:", isEmbedded);
       const result = await sendTransaction(
         {
           to: contractConfig.address,
@@ -30,7 +39,7 @@ export function useCreateAppointment() {
           chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "11155111"),
         },
         {
-          sponsor: true,
+          sponsor: isEmbedded, // ✅ Only enable sponsor for embedded wallets
         }
       );
       console.log("✅ createAppointment tx sent, hash:", result);
@@ -53,9 +62,11 @@ export function useConfirmAppointment() {
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
   const { sendTransaction } = useSendTransaction();
+  const isEmbedded = useIsEmbeddedWallet();
 
   const confirm = async (args: any[]) => {
     console.log("⛓️ confirm() called with args:", args);
+    console.log("🔑 Is embedded wallet?", isEmbedded);
     setIsPending(true);
     setError(null);
     try {
@@ -64,7 +75,7 @@ export function useConfirmAppointment() {
         functionName: "confirmAppointment",
         args,
       });
-      console.log("📤 Sending confirmAppointment with sponsor: true");
+      console.log("📤 Sending confirmAppointment with sponsor:", isEmbedded);
       const result = await sendTransaction(
         {
           to: contractConfig.address,
@@ -72,7 +83,7 @@ export function useConfirmAppointment() {
           chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "11155111"),
         },
         {
-          sponsor: true,
+          sponsor: isEmbedded,
         }
       );
       console.log("✅ confirmAppointment tx sent, hash:", result);
@@ -95,9 +106,11 @@ export function useCompleteAppointment() {
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
   const { sendTransaction } = useSendTransaction();
+  const isEmbedded = useIsEmbeddedWallet();
 
   const complete = async (args: any[]) => {
     console.log("⛓️ complete() called with args:", args);
+    console.log("🔑 Is embedded wallet?", isEmbedded);
     setIsPending(true);
     setError(null);
     try {
@@ -106,7 +119,7 @@ export function useCompleteAppointment() {
         functionName: "completeAppointment",
         args,
       });
-      console.log("📤 Sending completeAppointment with sponsor: true");
+      console.log("📤 Sending completeAppointment with sponsor:", isEmbedded);
       const result = await sendTransaction(
         {
           to: contractConfig.address,
@@ -114,7 +127,7 @@ export function useCompleteAppointment() {
           chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "11155111"),
         },
         {
-          sponsor: true,
+          sponsor: isEmbedded,
         }
       );
       console.log("✅ completeAppointment tx sent, hash:", result);
