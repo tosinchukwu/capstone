@@ -1,3 +1,4 @@
+cat > app/providers.tsx << 'EOF'
 "use client";
 
 import { ThemeProvider as NextThemeProvider } from "next-themes";
@@ -26,6 +27,7 @@ export const wagmiConfig = createConfig({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
+  const privyAppSecret = process.env.NEXT_PUBLIC_PRIVY_APP_SECRET;
 
   return (
     <NextThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -35,6 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           loginMethods: ["email", "wallet", "google"],
           appearance: { theme: "light", accentColor: "#2563eb" },
         }}
+        {...({ appSecret: privyAppSecret } as any)} // ✅ Allows appSecret without type error
       >
         <QueryClientProvider client={queryClient}>
           <WagmiProvider config={wagmiConfig}>
@@ -45,3 +48,4 @@ export function Providers({ children }: { children: React.ReactNode }) {
     </NextThemeProvider>
   );
 }
+EOF
