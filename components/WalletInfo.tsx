@@ -15,6 +15,7 @@ export default function WalletInfo() {
   );
   const walletAddress = embeddedWallet?.address;
 
+  // Fetch balance
   useEffect(() => {
     async function fetchBalance() {
       if (!walletAddress) return;
@@ -34,8 +35,9 @@ export default function WalletInfo() {
     fetchBalance();
   }, [walletAddress]);
 
-  if (!embeddedWallet) {
-    return null; // Don't show if no embedded wallet
+  // ✅ If no embedded wallet or no address, return null
+  if (!embeddedWallet || !walletAddress) {
+    return null;
   }
 
   const truncatedAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
