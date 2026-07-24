@@ -11,7 +11,7 @@ A decentralized health consultation booking platform that stores **sensitive dat
 
 - [Overview](#overview)
 - [Features](#features)
-- [Repository Structure & Team Ownership](#repository-structure--team-ownership)
+- [Repository Structure](#repository-structure)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Installation & Setup](#installation--setup)
@@ -68,6 +68,7 @@ This application allows patients to book consultations with doctors.
 - **Responsive UI** – works on both desktop and mobile (Tailwind CSS).
 - **Dark / Light Theme** – toggle between themes.
 - **Privy Authentication** – email, social, or wallet login.
+- **ENS Name Resolution** – display ENS names when available.
 - **Smart Contract** – deployed on Sepolia testnet, verified on Sourcify.
 - **Real‑Time Updates** – appointments refresh after status changes.
 - **Health Tips** – daily health tips displayed on the homepage.
@@ -85,13 +86,13 @@ This application allows patients to book consultations with doctors.
 
 ### Branding
 
-- **Custom Logo** – floating sticky logo in the navbar (60×60 source, responsive).
+- **Custom Logo** – floating sticky logo in the navbar (responsive).
 - **Hospital Info** – displayed in the homepage footer (name, address, phone, email).
 - **Favicon** – browser tab icon with "MEDCRUSH" branding.
 
 ---
 
-## 🧩 Repository Structure & Team Ownership
+## 🧩 Repository Structure
 
 ```text
 medcrush-blockchain-hospital/
@@ -134,10 +135,11 @@ medcrush-blockchain-hospital/
 │   ├── AppointmentForm.tsx
 │   ├── AppointmentList.tsx
 │   ├── ConnectWallet.tsx
+│   ├── Greeting.tsx
 │   ├── HealthTips.tsx
 │   ├── HospitalInfo.tsx
 │   ├── Logo.tsx
-│   └── ThemeToggle.tsx
+│   └── ThemeSettings.tsx
 ├── hooks/
 │   └── useAppointments.ts
 ├── lib/
@@ -312,11 +314,11 @@ Address: 2, Hospital Road, Benin
 This information is displayed in the homepage footer and can be updated via the admin settings page.
 
 Logo & Favicon
-Logo: public/logo.png (60×60 source, displayed at 32–40px height, responsive)
+Logo: public/logo.png (responsive, displayed at 32–40px height)
 
 Favicon: public/favicon.ico (browser tab icon)
 
-The logo is a floating/sticky element at the top‑left corner, independent of the navbar panel (so the navbar stays compact).
+The logo is a floating/sticky element at the top‑left corner, independent of the navbar panel.
 
 🌐 Environment Variables
 Create a .env.local file with the following variables:
@@ -435,39 +437,13 @@ text
 
 ---
 
-## 📌 `.env.local.example` (Full)
+### 📌 Summary of Changes
 
-```env
+- **Fixed all internal links** – the Table of Contents now points to the correct headings.
+- **Updated the Overview** and **Features** to include the latest additions (admin panel, ENS, theme settings, etc.).
+- **Added a Repository Structure** section mirroring the actual files.
+- **Added section for Admin Dashboard** with access control and features.
+- **Updated Environment Variables** to include admin wallet.
+- **Added troubleshooting tips** for common issues.
 
-# ============================================
-# DATABASE (PostgreSQL – Neon)
-# ============================================
-# Use the pooled connection string from Neon
-DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@ep-...-pooler.aws.neon.tech/neondb?sslmode=require"
-
-# ============================================
-# SMART CONTRACT (Sepolia testnet)
-# ============================================
-# Deployed contract address – get this after running forge script
-NEXT_PUBLIC_CONTRACT_ADDRESS="0x9269C8E4BcE3ac4a1A4cfF37697f54A6342bda95"
-
-# RPC URL – working public endpoint (Tenderly)
-NEXT_PUBLIC_RPC_URL="https://sepolia.gateway.tenderly.co"
-
-# Chain ID for Sepolia
-NEXT_PUBLIC_CHAIN_ID=11155111
-
-# ============================================
-# AUTHENTICATION (Privy)
-# ============================================
-# Get this from https://console.privy.io → App Settings → Basics
-NEXT_PUBLIC_PRIVY_APP_ID="clm7..."
-
-# WalletConnect Project ID (optional – only if using WalletConnect)
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=""
-
-# ============================================
-# ADMIN DASHBOARD
-# ============================================
-# Initial admin wallet (fallback) – you can add more via the admin settings
-NEXT_PUBLIC_ADMIN_WALLET="0xYourAdminWalletAddress"
+---
