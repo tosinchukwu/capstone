@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import ConnectWallet from "@/components/ConnectWallet";
 import AppointmentList from "@/components/AppointmentList";
 import Greeting from "@/components/Greeting";
-import WalletInfo from "@/components/WalletInfo"; // ✅ added
+import WalletInfo from "@/components/WalletInfo";
 import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
 
 type Slot = {
@@ -125,7 +125,6 @@ export default function DashboardPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  // Combine pending states
   const isContractPending = confirmPending || completePending || isWaiting;
 
   useEffect(() => {
@@ -158,7 +157,7 @@ export default function DashboardPage() {
 
       <Greeting />
 
-      {/* ✅ WalletInfo added here */}
+      {/* ✅ WalletInfo placed here */}
       <div className="mt-4 mb-6">
         <WalletInfo />
       </div>
