@@ -9,14 +9,15 @@ function useContractWrite(functionName: string) {
   const { wallets } = useWallets();
   const isEmbedded = wallets.some((w) => w.walletClientType === "privy");
   const { sendTransaction } = useSendTransaction();
-  const { writeContract, isPending: wagmiPending } = useWagmiWriteContract();
+  const { writeContract, isPending: wagmiPending, data: wagmiData } = useWagmiWriteContract();
   const [isPending, setIsPending] = useState(false);
+  const [data, setData] = useState<any>(null);
 
   const write = async (args: any[]) => {
     setIsPending(true);
+    setData(null);
     try {
       if (isEmbedded) {
-        // Use Privy sendTransaction with sponsorship
         const encodedData = encodeFunctionData({
           abi: contractConfig.abi,
           functionName,
@@ -30,9 +31,9 @@ function useContractWrite(functionName: string) {
           },
           { sponsor: true }
         );
+        setData(result);
         return result;
       } else {
-        // Use Wagmi writeContract (no sponsorship)
         return new Promise((resolve, reject) => {
           writeContract(
             {
@@ -42,7 +43,10 @@ function useContractWrite(functionName: string) {
               args,
             },
             {
-              onSuccess: (data) => resolve(data),
+              onSuccess: (data) => {
+                setData(data);
+                resolve(data);
+              },
               onError: (error) => reject(error),
             }
           );
@@ -53,39 +57,39 @@ function useContractWrite(functionName: string) {
     }
   };
 
-  return { write, isPending: isPending || wagmiPending };
+  return { write, isPending: isPending || wagmiPending, data };
 }
 
 // ----- PUBLIC HOOKS -----
 
 export function useCreateAppointment() {
-  const { write, isPending } = useContractWrite("createAppointment");
+  const { write, isPending, data } = useContractWrite("createAppointment");
   const create = async (args: any[]) => {
     console.log("⛓️ create() called with args:", args);
     return await write(args);
   };
-  return { create, isPending };
+  return { create, isPending, data };
 }
 
 export function useConfirmAppointment() {
-  const { write, isPending } = useContractWrite("confirmAppointment");
+  const { write, isPending, data } = useContractWrite("confirmAppointment");
   const confirm = async (args: any[]) => {
     console.log("⛓️ confirm() called with args:", args);
     return await write(args);
   };
-  return { confirm, isPending };
+  return { confirm, isPending, data };
 }
 
 export function useCompleteAppointment() {
-  const { write, isPending } = useContractWrite("completeAppointment");
+  const { write, isPending, data } = useContractWrite("completeAppointment");
   const complete = async (args: any[]) => {
     console.log("⛓️ complete() called with args:", args);
     return await write(args);
   };
-  return { complete, isPending };
+  return { complete, isPending, data };
 }
 
-// ----- READ HOOK (unchanged) -----
+// ----- READ HOOK -----
 
 export function useGetAppointment(id: number) {
   const result = useReadContract({
