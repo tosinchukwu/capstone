@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 function serializeBigInt(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'bigint') return obj.toString();
+  if (obj instanceof Date) return obj.toISOString(); // ✅ Date → ISO string
   if (Array.isArray(obj)) return obj.map(serializeBigInt);
   if (typeof obj === 'object') {
     const result: any = {};
@@ -24,38 +25,28 @@ export async function GET(request: Request) {
 
   const where: any = {};
 
-  // Handle patient filtering – support both UUID and wallet
+  // Patient filtering
   if (patientId) {
     const user = await prisma.user.findUnique({ where: { id: patientId } });
     if (user) {
       where.patientId = user.id;
     } else {
       const userByWallet = await prisma.user.findUnique({ where: { wallet: patientId } });
-      if (userByWallet) {
-        where.patientId = userByWallet.id;
-      } else {
-        return NextResponse.json([]);
-      }
+      if (userByWallet) where.patientId = userByWallet.id;
+      else return NextResponse.json([]);
     }
   } else if (patientWallet) {
     const user = await prisma.user.findUnique({ where: { wallet: patientWallet } });
-    if (user) {
-      where.patientId = user.id;
-    } else {
-      return NextResponse.json([]);
-    }
+    if (user) where.patientId = user.id;
+    else return NextResponse.json([]);
   }
 
+  // Doctor filtering
   if (doctorId) {
-    // If doctorId is a wallet address, find the user by wallet
     const doctor = await prisma.user.findUnique({ where: { wallet: doctorId } });
-    if (doctor) {
-      where.doctorId = doctor.id;
-    } else {
-      // Assume it's already a UUID
-      where.doctorId = doctorId;
-    }
+    where.doctorId = doctor ? doctor.id : doctorId;
   }
+
   if (status) where.status = status;
 
   try {
