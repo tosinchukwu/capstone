@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ConnectWallet from "@/components/ConnectWallet";
 import AppointmentList from "@/components/AppointmentList";
 import Greeting from "@/components/Greeting";
+import WalletInfo from "@/components/WalletInfo"; // ✅ added
 import { useConfirmAppointment, useCompleteAppointment } from "@/hooks/useAppointments";
 
 type Slot = {
@@ -27,7 +28,6 @@ export default function DashboardPage() {
   const [doctorId, setDoctorId] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // These hooks are still used for `isContractPending` (passed to AppointmentList)
   const { confirm: confirmAppointment, isPending: confirmPending, data: confirmData } = useConfirmAppointment();
   const { complete: completeAppointment, isPending: completePending, data: completeData } = useCompleteAppointment();
 
@@ -125,9 +125,7 @@ export default function DashboardPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  // We don't need updateAppointmentStatus here – AppointmentList handles it internally.
-
-  // Combine pending states from the dashboard hooks (for passing to AppointmentList)
+  // Combine pending states
   const isContractPending = confirmPending || completePending || isWaiting;
 
   useEffect(() => {
@@ -160,6 +158,11 @@ export default function DashboardPage() {
 
       <Greeting />
 
+      {/* ✅ WalletInfo added here */}
+      <div className="mt-4 mb-6">
+        <WalletInfo />
+      </div>
+
       <div className="mb-4">
         <Link href="/dashboard/profile" className="text-blue-600 dark:text-blue-400 hover:underline">
           Edit Profile →
@@ -178,7 +181,7 @@ export default function DashboardPage() {
           doctorId={doctorId}
           refresh={refreshKey}
           onUpdate={handleRefreshAppointments}
-          isPending={isContractPending}   // ✅ pass combined pending state
+          isPending={isContractPending}
         />
       </div>
 
