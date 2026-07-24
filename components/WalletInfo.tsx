@@ -10,7 +10,6 @@ export default function WalletInfo() {
   const [balance, setBalance] = useState("");
   const [showExport, setShowExport] = useState(false);
 
-  // Find the embedded wallet
   const embeddedWallet = wallets.find(
     (wallet) => wallet.walletClientType === "privy"
   );
@@ -36,9 +35,12 @@ export default function WalletInfo() {
     fetchBalance();
   }, [walletAddress]);
 
-  // ❌ Only show for embedded wallets
-  if (!ready || !isEmbedded || !walletAddress) {
-    return null;
+  if (!ready) {
+    return <div className="text-sm text-gray-400">Loading wallet...</div>;
+  }
+
+  if (!isEmbedded || !walletAddress) {
+    return null; // Only show for embedded wallets
   }
 
   const truncatedAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
