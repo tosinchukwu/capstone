@@ -10,9 +10,15 @@ export default function WalletInfo() {
   const [balance, setBalance] = useState("");
   const [showExport, setShowExport] = useState(false);
 
+  // 🔍 Debug logs
+  console.log("🔍 WalletInfo - ready:", ready);
+  console.log("🔍 WalletInfo - wallets:", wallets);
+
   const embeddedWallet = wallets.find(
     (wallet) => wallet.walletClientType === "privy"
   );
+  console.log("🔍 WalletInfo - embeddedWallet found:", !!embeddedWallet);
+
   const walletAddress = embeddedWallet?.address;
   const isEmbedded = !!embeddedWallet;
 
@@ -35,15 +41,26 @@ export default function WalletInfo() {
     fetchBalance();
   }, [walletAddress]);
 
+  // If not ready or not embedded, return null (don't show anything)
   if (!ready) {
     return <div className="text-sm text-gray-400">Loading wallet...</div>;
   }
 
   if (!isEmbedded || !walletAddress) {
-    return null; // Only show for embedded wallets
+    console.log("🔍 WalletInfo - Not embedded or no address – hiding");
+    return null;
   }
 
   const truncatedAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+
+  const handleExport = async () => {
+    console.log("🔍 WalletInfo - Export clicked");
+    try {
+      await exportWallet();
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
+  };
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-3 sm:p-4 max-w-sm mx-auto">
@@ -67,7 +84,7 @@ export default function WalletInfo() {
       {showExport && (
         <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
           <button
-            onClick={() => exportWallet()}
+            onClick={handleExport}
             className="w-full text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
           >
             Confirm Export
