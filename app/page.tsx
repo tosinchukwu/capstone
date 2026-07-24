@@ -7,6 +7,7 @@ import ConnectWallet from "@/components/ConnectWallet";
 import HealthTips from "@/components/HealthTips";
 import ThemeSettings from "@/components/ThemeSettings";
 import Greeting from "@/components/Greeting";
+import WalletInfo from "@/components/WalletInfo";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import HospitalInfo from "@/components/HospitalInfo";
@@ -33,6 +34,7 @@ export default function Home() {
     }
   };
 
+  // Role selector
   if (!role) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -136,8 +138,14 @@ export default function Home() {
         ) : (
           <div>
             <Greeting />
+
             {role === "patient" && (
-              <div>
+              <>
+                {/* ✅ WalletInfo visible for patients */}
+                <div className="mt-4 mb-6">
+                  <WalletInfo />
+                </div>
+
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
                   <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
@@ -152,11 +160,11 @@ export default function Home() {
                   </Link>
                 </div>
                 <AppointmentList patientWallet={address} />
-              </div>
+              </>
             )}
 
             {role === "doctor" && (
-              <div>
+              <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
                   <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
@@ -171,7 +179,7 @@ export default function Home() {
                   </Link>
                 </div>
                 <AppointmentList doctorId={address} />
-              </div>
+              </>
             )}
           </div>
         )}
