@@ -4,6 +4,8 @@ import { useSendTransaction } from "@privy-io/react-auth";
 import { contractConfig } from "@/lib/contract";
 import { encodeFunctionData } from "viem";
 
+// ----- WRITE HOOKS -----
+
 export function useCreateAppointment() {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -129,6 +131,8 @@ export function useCompleteAppointment() {
 
   return { complete, isPending, error, data };
 }
+
+// ----- READ HOOK -----
 
 export function useGetAppointment(id: number) {
   const result = useReadContract({
