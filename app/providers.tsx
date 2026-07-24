@@ -26,16 +26,16 @@ export const wagmiConfig = createConfig({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
-  const privyAppSecret = process.env.PRIVY_APP_SECRET; // ✅ Add this
+  const privyAppSecret = process.env.PRIVY_APP_SECRET!;
 
   return (
     <NextThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <PrivyProvider
         appId={privyAppId}
+        appSecret={privyAppSecret} // ✅ Correct: appSecret is a prop on PrivyProvider
         config={{
           loginMethods: ["email", "wallet", "google"],
           appearance: { theme: "light", accentColor: "#2563eb" },
-          appSecret: privyAppSecret, // ✅ Required for gas sponsorship
           wagmiConfig,
         }}
       >
