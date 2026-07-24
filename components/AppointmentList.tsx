@@ -49,6 +49,7 @@ export default function AppointmentList({
     if (patientWallet) params.append("patientWallet", patientWallet);
     if (doctorId) params.append("doctorId", doctorId);
     const url = `/api/appointments?${params.toString()}`;
+    console.log("📡 Fetching appointments with params:", params.toString());
     fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch appointments");
@@ -80,12 +81,10 @@ export default function AppointmentList({
     }
   }, [confirmData, completeData]);
 
-  // ✅ When transaction succeeds, update database then refresh
   useEffect(() => {
     if (isSuccess && pendingUpdate) {
       const { id, status } = pendingUpdate;
       console.log(`📝 Updating database for appointment ${id} to ${status}`);
-      
       fetch(`/api/appointments/${id}`, {
         method: "PUT",
         body: JSON.stringify({ status }),
@@ -93,8 +92,13 @@ export default function AppointmentList({
       })
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update database");
-          console.log(`✅ Database updated: ${id} → ${status}`);
-          // Refresh list after DB update
+          return res.json();
+        })
+        .then((data) => {
+          console.log("✅ Database updated:", data);
+          setAppointments((prev) =>
+            prev.map((app) => (app.id === id ? { ...app, status } : app))
+          );
           fetchAppointments();
           setRefreshTrigger((prev) => prev + 1);
           if (onUpdate) onUpdate();
@@ -103,7 +107,7 @@ export default function AppointmentList({
         })
         .catch((err) => {
           console.error("❌ Database update error:", err);
-          alert("⚠️ Transaction succeeded but failed to update database.");
+          alert("⚠️ Transaction succeeded but database update failed.");
           setPendingUpdate(null);
           setTxHash(undefined);
         });
@@ -142,7 +146,6 @@ export default function AppointmentList({
           return;
         }
 
-        // Store pending update info
         setPendingUpdate({ id, status });
 
         if (status === "CONFIRMED") {
@@ -154,7 +157,6 @@ export default function AppointmentList({
           completeAppointment([BigInt(chainId)]);
           alert("⏳ Complete transaction sent. Please approve in your wallet.");
         } else if (status === "CANCELLED") {
-          // Reject: no contract call, just DB update
           setPendingUpdate(null);
           fetch(`/api/appointments/${id}`, {
             method: "PUT",
